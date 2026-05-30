@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nail it by K — Custom Gel Press-ons · Qatar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pridi:wght@300;400;600&family=Mulish:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --lilac: #CBA6D9;
+      --orchid: #E58FC9;
+      --bubblegum: #FF82BE;
+      --flamingo: #FF5AA6;
+      --magenta: #F5279A;
+      --wine: #7C1D3C;
+      --plum: #2E1822;
+      --cream: #FBF3EF;
+      --mauve: #957F8A;
+      --gold: #D9A86A;
+      --grad: linear-gradient(168deg, #CBA6D9, #E58FC9, #FF5AA6, #F5279A);
+      --grad-soft: linear-gradient(168deg, #CBA6D9 0%, #E58FC9 60%, #FF82BE 100%);
+      --ff-display: 'Pridi', serif;
+      --ff-body: 'Mulish', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--ff-body); color: var(--plum); background: var(--cream); overflow-x: hidden; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(251,243,239,0.88);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(203,166,217,0.2);
+      transition: padding .3s, box-shadow .3s;
+    }
+    nav.scrolled { padding: 10px 32px; box-shadow: 0 4px 30px rgba(245,39,154,.08); }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo img { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; }
+    .nav-logo-text { font-family: var(--ff-display); font-weight: 600; font-size: 18px; color: var(--wine); line-height: 1.15; }
+    .nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
+    .nav-links a { text-decoration: none; font-weight: 700; font-size: 13px; color: var(--plum); letter-spacing: .02em; transition: color .2s; }
+    .nav-links a:hover { color: var(--magenta); }
+    .btn-primary {
+      background: var(--grad); color: white; border: none;
+      padding: 11px 26px; border-radius: 100px;
+      font-family: var(--ff-body); font-weight: 700; font-size: 13px;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+      transition: transform .2s, box-shadow .2s; white-space: nowrap;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245,39,154,.35); }
+    .btn-outline {
+      background: transparent; color: var(--wine); border: 2px solid var(--wine);
+      padding: 11px 26px; border-radius: 100px;
+      font-family: var(--ff-body); font-weight: 700; font-size: 13px;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+      transition: all .2s;
+    }
+    .btn-outline:hover { background: var(--wine); color: var(--cream); }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 4px; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--wine); border-radius: 2px; transition: all .3s; }
+    .mobile-menu {
+      display: none; position: fixed; inset: 0; background: var(--cream); z-index: 99;
+      flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a { font-family: var(--ff-display); font-weight: 600; font-size: 30px; color: var(--wine); text-decoration: none; transition: color .2s; }
+    .mobile-menu a:hover { color: var(--magenta); }
+    .mobile-close { position: absolute; top: 20px; right: 24px; background: none; border: none; font-size: 32px; color: var(--wine); cursor: pointer; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center;
+      position: relative; overflow: hidden; padding-top: 80px;
+      background: var(--cream);
+    }
+    .blob {
+      position: absolute; border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+      animation: morph 8s ease-in-out infinite; pointer-events: none;
+    }
+    .blob-1 { width: 580px; height: 580px; background: var(--grad-soft); top: -120px; right: -120px; opacity: .18; }
+    .blob-2 { width: 380px; height: 380px; background: radial-gradient(circle, var(--lilac), transparent 70%); bottom: -60px; left: -80px; opacity: .35; animation-duration: 11s; animation-direction: reverse; }
+    .blob-3 { width: 260px; height: 260px; background: radial-gradient(circle, var(--bubblegum), transparent 70%); bottom: 120px; right: 280px; opacity: .12; animation: float 7s ease-in-out infinite; }
+    @keyframes morph {
+      0%,100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+      50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+    }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-18px); } }
+
+    .hero-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; width: 100%; }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(203,166,217,.18); border: 1px solid rgba(203,166,217,.4);
+      padding: 6px 16px; border-radius: 100px;
+      font-weight: 700; font-size: 11px; color: var(--wine);
+      letter-spacing: .1em; text-transform: uppercase; margin-bottom: 22px;
+    }
+    .hero-pill span { color: var(--magenta); }
+    h1 {
+      font-family: var(--ff-display); font-weight: 600;
+      font-size: clamp(44px, 5.5vw, 76px); line-height: 1.06; color: var(--wine); margin-bottom: 16px;
+    }
+    h1 em {
+      font-style: normal;
+      background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-sub { font-size: 17px; color: var(--mauve); line-height: 1.7; margin-bottom: 36px; max-width: 440px; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+    .hero-stats { display: flex; gap: 32px; margin-top: 44px; flex-wrap: wrap; }
+    .stat-num { font-family: var(--ff-display); font-weight: 600; font-size: 26px; color: var(--wine); }
+    .stat-lbl { font-size: 11px; font-weight: 700; color: var(--mauve); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+
+    .hero-visual { display: flex; justify-content: center; align-items: center; position: relative; }
+    .logo-card {
+      width: 320px; height: 320px; background: var(--grad); border-radius: 40px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 40px 80px rgba(245,39,154,.28), 0 0 0 1px rgba(255,255,255,.15) inset;
+      animation: float 6s ease-in-out infinite;
+    }
+    .logo-card img { width: 86%; height: 86%; object-fit: cover; border-radius: 28px; }
+    .badge {
+      position: absolute; background: white; border-radius: 16px; padding: 11px 16px;
+      box-shadow: 0 8px 30px rgba(0,0,0,.11); display: flex; align-items: center; gap: 10px;
+    }
+    .badge-1 { bottom: -18px; left: -36px; animation: float 7s ease-in-out infinite .5s; }
+    .badge-2 { top: 16px; right: -36px; animation: float 5s ease-in-out infinite 1s; }
+    .badge-icon {
+      width: 34px; height: 34px; background: var(--grad); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0;
+    }
+    .badge-txt { font-weight: 700; font-size: 12px; color: var(--plum); }
+    .badge-sub { font-size: 10px; color: var(--mauve); }
+
+    /* ── MARQUEE ── */
+    .marquee-bar { background: var(--wine); padding: 14px 0; overflow: hidden; }
+    .marquee-track { display: flex; gap: 48px; animation: marquee 22s linear infinite; width: max-content; }
+    .m-item { display: flex; align-items: center; gap: 14px; white-space: nowrap; font-family: var(--ff-display); font-weight: 600; font-size: 14px; color: rgba(255,255,255,.65); text-transform: uppercase; letter-spacing: .08em; }
+    .m-dot { width: 5px; height: 5px; background: var(--gold); border-radius: 50%; flex-shrink: 0; }
+    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* ── SECTIONS ── */
+    section { padding: 96px 0; }
+    .s-tag { display: inline-flex; align-items: center; gap: 8px; font-weight: 900; font-size: 11px; color: var(--magenta); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 14px; }
+    .s-tag::before { content: ''; display: block; width: 18px; height: 2px; background: var(--magenta); border-radius: 2px; }
+    h2 { font-family: var(--ff-display); font-weight: 600; font-size: clamp(30px, 3.6vw, 50px); color: var(--wine); line-height: 1.15; margin-bottom: 14px; }
+    .s-sub { font-size: 16px; color: var(--mauve); line-height: 1.7; max-width: 480px; }
+    .s-head { margin-bottom: 56px; }
+    .s-head.center { text-align: center; }
+    .s-head.center .s-sub { margin: 0 auto; }
+
+    /* ── HOW IT WORKS ── */
+    .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 28px; position: relative; }
+    .steps::before {
+      content: ''; position: absolute; top: 44px; left: 22%; right: 22%; height: 2px;
+      background: linear-gradient(90deg, var(--lilac), var(--magenta), var(--lilac)); z-index: 0;
+    }
+    .step {
+      background: white; border-radius: 24px; padding: 32px 24px; text-align: center;
+      position: relative; z-index: 1; border: 1px solid rgba(203,166,217,.2);
+      transition: transform .3s, box-shadow .3s;
+    }
+    .step:hover { transform: translateY(-8px); box-shadow: 0 20px 50px rgba(245,39,154,.1); }
+    .step-n {
+      width: 52px; height: 52px; background: var(--grad); border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--ff-display); font-weight: 600; font-size: 20px; color: white; margin: 0 auto 20px;
+    }
+    .step-emoji { font-size: 28px; margin-bottom: 10px; }
+    .step h3 { font-family: var(--ff-display); font-weight: 600; font-size: 19px; color: var(--wine); margin-bottom: 8px; }
+    .step p { font-size: 13px; color: var(--mauve); line-height: 1.65; }
+
+    /* ── STYLES ── */
+    .styles-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+    .style-card { border-radius: 24px; overflow: hidden; position: relative; aspect-ratio: 3/4; cursor: pointer; }
+    .style-bg { position: absolute; inset: 0; transition: transform .4s; }
+    .style-card:hover .style-bg { transform: scale(1.06); }
+    .style-card:nth-child(1) .style-bg { background: linear-gradient(135deg,#E8E0F0,#D4C8E8); }
+    .style-card:nth-child(2) .style-bg { background: linear-gradient(135deg,#FFE0F0,#FFAAD4); }
+    .style-card:nth-child(3) .style-bg { background: linear-gradient(135deg,#FFF0D8,#F5D9A8); }
+    .style-card:nth-child(4) .style-bg { background: linear-gradient(135deg,#D8F0E8,#A8D9C4); }
+    .style-card:nth-child(5) .style-bg { background: linear-gradient(135deg,#E0E8FF,#B8C4F0); }
+    .style-card:nth-child(6) .style-bg { background: linear-gradient(135deg,#FFE8E8,#F0B8B8); }
+    .style-emo { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-62%); font-size: 68px; transition: transform .3s; }
+    .style-card:hover .style-emo { transform: translate(-50%,-66%) scale(1.1); }
+    .style-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 22px; background: linear-gradient(transparent, rgba(0,0,0,.13)); }
+    .style-info h3 { font-family: var(--ff-display); font-weight: 600; font-size: 17px; color: var(--wine); margin-bottom: 3px; }
+    .style-info p { font-size: 11px; color: var(--plum); opacity: .65; }
+
+    /* ── WHY US ── */
+    .why-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
+    .why-card {
+      background: white; border-radius: 22px; padding: 32px;
+      display: flex; gap: 20px; align-items: flex-start;
+      border: 1px solid rgba(203,166,217,.15); transition: transform .3s, box-shadow .3s;
+    }
+    .why-card:hover { transform: translateY(-4px); box-shadow: 0 14px 40px rgba(245,39,154,.09); }
+    .why-ico {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;
+    }
+    .wi1 { background: linear-gradient(135deg,var(--lilac),var(--orchid)); }
+    .wi2 { background: linear-gradient(135deg,var(--bubblegum),var(--flamingo)); }
+    .wi3 { background: linear-gradient(135deg,var(--flamingo),var(--magenta)); }
+    .wi4 { background: linear-gradient(135deg,#D9A86A,#e8c08a); }
+    .why-card h3 { font-family: var(--ff-display); font-weight: 600; font-size: 19px; color: var(--wine); margin-bottom: 7px; }
+    .why-card p { font-size: 13px; color: var(--mauve); line-height: 1.65; }
+
+    /* ── GALLERY ── */
+    .gallery-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); grid-template-rows: repeat(2,210px); gap: 14px;
+    }
+    .gal-item { border-radius: 20px; overflow: hidden; position: relative; cursor: pointer; }
+    .gal-item:first-child { grid-column: span 2; grid-row: span 2; }
+    .gal-ph {
+      width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; transition: transform .35s;
+    }
+    .gal-item:hover .gal-ph { transform: scale(1.04); }
+    .gal-item:nth-child(1) .gal-ph { background: linear-gradient(135deg,var(--lilac),var(--orchid)); }
+    .gal-item:nth-child(2) .gal-ph { background: linear-gradient(135deg,#FFE0F0,var(--bubblegum)); }
+    .gal-item:nth-child(3) .gal-ph { background: linear-gradient(135deg,var(--flamingo),var(--magenta)); }
+    .gal-item:nth-child(4) .gal-ph { background: linear-gradient(135deg,#FFF0D8,var(--gold)); }
+    .gal-item:nth-child(5) .gal-ph { background: linear-gradient(135deg,#E0E8FF,var(--lilac)); }
+    .gal-ph-icon { font-size: 44px; opacity: .55; }
+    .gal-ph-lbl { font-weight: 700; font-size: 12px; color: rgba(44,24,34,.45); text-align: center; padding: 0 16px; }
+    .gal-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .35s; }
+    .gal-item:hover img { transform: scale(1.04); }
+    .gal-overlay {
+      position: absolute; inset: 0; background: linear-gradient(transparent 55%,rgba(44,24,34,.5));
+      opacity: 0; transition: opacity .3s; display: flex; align-items: flex-end; padding: 18px;
+    }
+    .gal-item:hover .gal-overlay { opacity: 1; }
+    .gal-overlay span { color: white; font-weight: 700; font-size: 12px; }
+    .gallery-note { text-align: center; margin-top: 36px; }
+    .gallery-note p { color: var(--mauve); margin-bottom: 18px; font-size: 14px; }
+
+    /* ── COMBINED ORDER & PRICING ── */
+    .combined-order { display: grid; grid-template-columns: 1fr auto; gap: 60px; align-items: center; }
+    .co-tag { font-weight: 900; font-size: 11px; color: rgba(255,255,255,.7); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 14px; }
+    .co-right { display: flex; flex-direction: column; align-items: center; gap: 16px; flex-shrink: 0; }
+    .co-pill { background: rgba(255,255,255,.18); backdrop-filter: blur(8px); border-radius: 100px; padding: 8px 20px; font-weight: 700; font-size: 13px; color: white; white-space: nowrap; }
+    .co-ig { color: white; font-weight: 700; font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 6px; opacity: .85; transition: opacity .2s; }
+    .co-ig:hover { opacity: 1; }
+    @media (max-width: 768px) {
+      .combined-order { grid-template-columns: 1fr; text-align: center; }
+      .co-right { align-items: center; }
+    }
+
+    /* ── SHARED BUTTON ── */
+    .btn-white {
+      background: white; color: var(--wine); border: none; padding: 15px 34px; border-radius: 100px;
+      font-family: var(--ff-body); font-weight: 700; font-size: 14px; cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
+      transition: all .2s; white-space: nowrap;
+    }
+    .btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,.18); }
+
+    /* ── FAQ ── */
+    .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .faq-item { background: white; border-radius: 18px; overflow: hidden; border: 1px solid rgba(203,166,217,.2); transition: box-shadow .2s; }
+    .faq-item.open { box-shadow: 0 8px 30px rgba(245,39,154,.08); }
+    .faq-q { padding: 22px 26px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-family: var(--ff-display); font-weight: 600; font-size: 16px; color: var(--wine); gap: 14px; user-select: none; }
+    .faq-ico { width: 26px; height: 26px; border-radius: 8px; background: rgba(245,39,154,.08); display: flex; align-items: center; justify-content: center; color: var(--magenta); font-size: 18px; flex-shrink: 0; transition: transform .3s, background .2s; }
+    .faq-item.open .faq-ico { transform: rotate(45deg); background: var(--magenta); color: white; }
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height .35s ease, padding .3s; padding: 0 26px; font-size: 13px; color: var(--mauve); line-height: 1.7; }
+    .faq-item.open .faq-a { max-height: 160px; padding: 0 26px 22px; }
+
+    /* ── FOOTER ── */
+    footer { background: var(--plum); padding: 56px 0 28px; }
+    .foot-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 48px; margin-bottom: 44px; }
+    .foot-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; text-decoration: none; }
+    .foot-logo img { width: 44px; height: 44px; border-radius: 12px; }
+    .foot-logo-t { font-family: var(--ff-display); font-weight: 600; font-size: 18px; color: white; line-height: 1.15; }
+    .foot-tag { font-size: 13px; color: rgba(255,255,255,.55); line-height: 1.65; max-width: 240px; margin-bottom: 22px; }
+    .foot-socials { display: flex; gap: 10px; }
+    .foot-soc { width: 38px; height: 38px; border-radius: 11px; background: rgba(255,255,255,.08); display: flex; align-items: center; justify-content: center; text-decoration: none; color: rgba(255,255,255,.6); font-size: 17px; transition: all .2s; }
+    .foot-soc:hover { background: var(--magenta); color: white; }
+    .foot-col-t { font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: white; margin-bottom: 18px; }
+    .foot-links { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+    .foot-links a { text-decoration: none; color: rgba(255,255,255,.55); font-size: 13px; transition: color .2s; }
+    .foot-links a:hover { color: var(--bubblegum); }
+    .foot-div { height: 1px; background: rgba(255,255,255,.08); margin-bottom: 26px; }
+    .foot-bot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .foot-copy { font-size: 12px; color: rgba(255,255,255,.4); }
+    .foot-copy span { color: var(--bubblegum); }
+    .foot-heart { font-size: 12px; color: rgba(255,255,255,.4); display: flex; align-items: center; gap: 4px; }
+
+    /* ── ANIMATIONS ── */
+    .fade { opacity: 0; transform: translateY(28px); transition: opacity .6s ease, transform .6s ease; }
+    .fade.d1 { transition-delay: .1s; }
+    .fade.d2 { transition-delay: .2s; }
+    .fade.d3 { transition-delay: .3s; }
+    .fade.d4 { transition-delay: .4s; }
+    .fade.in { opacity: 1; transform: none; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .hero-inner { grid-template-columns: 1fr; text-align: center; }
+      .hero-sub { margin: 0 auto 36px; }
+      .hero-btns { justify-content: center; }
+      .hero-stats { justify-content: center; }
+      .hero-visual { display: none; }
+      .steps::before { display: none; }
+      .styles-grid { grid-template-columns: repeat(2,1fr); }
+      .gallery-grid { grid-template-columns: repeat(2,1fr); }
+      .gal-item:first-child { grid-column: span 2; grid-row: span 1; }
+      .price-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+      .price-card.feat { transform: none; }
+      .price-card.feat:hover { transform: translateY(-8px); }
+      .order-card { grid-template-columns: 1fr; text-align: center; }
+      .order-p { margin: 0 auto; }
+      .order-btns { align-items: center; }
+      .faq-grid { grid-template-columns: 1fr; }
+      .foot-top { grid-template-columns: 1fr 1fr; }
+      .foot-brand { grid-column: span 2; }
+    }
+    @media (max-width: 768px) {
+      .nav-links, .nav-cta { display: none; }
+      .hamburger { display: flex; }
+      section { padding: 64px 0; }
+      .steps { grid-template-columns: 1fr; }
+      .why-grid { grid-template-columns: 1fr; }
+      .gallery-grid { grid-template-columns: repeat(2,1fr); grid-template-rows: auto; }
+      .order-card { padding: 48px 28px; }
+      .foot-top { grid-template-columns: 1fr; }
+      .foot-brand { grid-column: span 1; }
+      .foot-bot { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .styles-grid { grid-template-columns: 1fr; }
+      .gallery-grid { grid-template-columns: 1fr; }
+      .gal-item:first-child { grid-column: span 1; }
+      h1 { font-size: 38px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">
+    <img src="brand_assets/nail logo.jpg" alt="Nail it by K logo">
+    <span class="nav-logo-text">Nail it<br>by K</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#how">How it Works</a></li>
+    <li><a href="#styles">Styles</a></li>
+    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#pricing">Orders &amp; Pricing</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <a href="#order" class="btn-primary nav-cta">Order Now 💅</a>
+  <button class="hamburger" id="ham" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mob">
+  <button class="mobile-close" id="mobClose">×</button>
+  <a href="#how" onclick="closeMob()">How it Works</a>
+  <a href="#styles" onclick="closeMob()">Styles</a>
+  <a href="#gallery" onclick="closeMob()">Gallery</a>
+  <a href="#pricing" onclick="closeMob()">Orders &amp; Pricing</a>
+  <a href="#faq" onclick="closeMob()">FAQ</a>
+  <a href="#order" onclick="closeMob()" class="btn-primary" style="margin-top:8px">Order Now 💅</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-pill">✦ <span>Now taking orders</span> · Doha, Qatar</div>
+        <h1>You dream it,<br><em>we nail it.</em></h1>
+        <p class="hero-sub">Custom gel press-on sets, hand-made to match your inspo and delivered to your door across Qatar. No salon chair. No waiting. Just perfect nails.</p>
+        <div class="hero-btns">
+          <a href="#order" class="btn-primary">DM to Order 💌</a>
+          <a href="#how" class="btn-outline">See How it Works</a>
+        </div>
+        <div class="hero-stats">
+          <div><div class="stat-num">100%</div><div class="stat-lbl">Hand-made</div></div>
+          <div><div class="stat-num">Qatar</div><div class="stat-lbl">Wide Delivery</div></div>
+          <div><div class="stat-num">Any</div><div class="stat-lbl">Design, Any Style</div></div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="logo-card">
+          <img src="brand_assets/nail logo.jpg" alt="Nail it by K">
+        </div>
+        <div class="badge badge-1">
+          <div class="badge-icon">💅</div>
+          <div><div class="badge-txt">Custom Made</div><div class="badge-sub">Matches your inspo</div></div>
+        </div>
+        <div class="badge badge-2">
+          <div class="badge-icon">🚚</div>
+          <div><div class="badge-txt">Qatar Delivery</div><div class="badge-sub">To your door</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-bar">
+  <div class="marquee-track">
+    <span class="m-item"><span class="m-dot"></span>Chrome Nails</span>
+    <span class="m-item"><span class="m-dot"></span>French Tips</span>
+    <span class="m-item"><span class="m-dot"></span>3D Charms</span>
+    <span class="m-item"><span class="m-dot"></span>Jelly Nails</span>
+    <span class="m-item"><span class="m-dot"></span>Press-Ons</span>
+    <span class="m-item"><span class="m-dot"></span>Custom Gel Sets</span>
+    <span class="m-item"><span class="m-dot"></span>Qatar Delivery</span>
+    <span class="m-item"><span class="m-dot"></span>Almond Shape</span>
+    <span class="m-item"><span class="m-dot"></span>Square Shape</span>
+    <span class="m-item"><span class="m-dot"></span>Reusable Sets</span>
+    <span class="m-item"><span class="m-dot"></span>Chrome Nails</span>
+    <span class="m-item"><span class="m-dot"></span>French Tips</span>
+    <span class="m-item"><span class="m-dot"></span>3D Charms</span>
+    <span class="m-item"><span class="m-dot"></span>Jelly Nails</span>
+    <span class="m-item"><span class="m-dot"></span>Press-Ons</span>
+    <span class="m-item"><span class="m-dot"></span>Custom Gel Sets</span>
+    <span class="m-item"><span class="m-dot"></span>Qatar Delivery</span>
+    <span class="m-item"><span class="m-dot"></span>Almond Shape</span>
+    <span class="m-item"><span class="m-dot"></span>Square Shape</span>
+    <span class="m-item"><span class="m-dot"></span>Reusable Sets</span>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="s-head center fade">
+      <div class="s-tag">The process</div>
+      <h2>Simple as 1, 2, 3.</h2>
+      <p class="s-sub">No appointments, no waiting rooms. Just send your inspo and we handle everything.</p>
+    </div>
+    <div class="steps">
+      <div class="step fade d1">
+        <div class="step-n">01</div>
+        <div class="step-emoji">📸</div>
+        <h3>Send your inspo</h3>
+        <p>DM us your nail inspiration photos on Instagram — any design, any style, any vibe.</p>
+      </div>
+      <div class="step fade d2">
+        <div class="step-n">02</div>
+        <div class="step-emoji">✨</div>
+        <h3>We hand-make it</h3>
+        <p>K crafts your custom gel press-on set from scratch, matching your inspo perfectly.</p>
+      </div>
+      <div class="step fade d3">
+        <div class="step-n">03</div>
+        <div class="step-emoji">📦</div>
+        <h3>Delivered to you</h3>
+        <p>Your set arrives at your door across Qatar, ready to wear — again and again.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STYLES -->
+<section id="styles" style="background:white">
+  <div class="container">
+    <div class="s-head fade">
+      <div class="s-tag">What we do</div>
+      <h2>Any style.<br>Made for you.</h2>
+      <p class="s-sub">From everyday classics to statement sets — if you can dream it, we can nail it.</p>
+    </div>
+    <div class="styles-grid">
+      <div class="style-card fade d1"><div class="style-bg"></div><div class="style-emo">🪞</div><div class="style-info"><h3>Chrome &amp; Mirror</h3><p>Reflective, ultra-glossy finish</p></div></div>
+      <div class="style-card fade d2"><div class="style-bg"></div><div class="style-emo">🌸</div><div class="style-info"><h3>French Tips</h3><p>Classic clean lines, your way</p></div></div>
+      <div class="style-card fade d3"><div class="style-bg"></div><div class="style-emo">✨</div><div class="style-info"><h3>3D Charms</h3><p>Gems, pearls &amp; intricate details</p></div></div>
+      <div class="style-card fade d1"><div class="style-bg"></div><div class="style-emo">🍬</div><div class="style-info"><h3>Jelly Nails</h3><p>Translucent, dreamy sheer tones</p></div></div>
+      <div class="style-card fade d2"><div class="style-bg"></div><div class="style-emo">💅</div><div class="style-info"><h3>Nail Art</h3><p>Florals, abstracts, patterns</p></div></div>
+      <div class="style-card fade d3"><div class="style-bg"></div><div class="style-emo">💎</div><div class="style-info"><h3>Ombre &amp; Gradient</h3><p>Seamless soft colour transitions</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section id="about">
+  <div class="container">
+    <div class="s-head fade">
+      <div class="s-tag">Why Nail it by K</div>
+      <h2>Salon-worthy nails,<br>on your schedule.</h2>
+      <p class="s-sub">We do things differently — and your nails will show it.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card fade d1"><div class="why-ico wi1">🎨</div><div><h3>Soft &amp; sweet</h3><p>Pretty pinks, a warm and caring approach. Every set starts with your vision and ends with something better than you imagined.</p></div></div>
+      <div class="why-card fade d2"><div class="why-ico wi2">🔥</div><div><h3>Bold &amp; trendy</h3><p>On top of every trend — chrome, French, jelly, 3D charms. Confident, never shy about going bold.</p></div></div>
+      <div class="why-card fade d3"><div class="why-ico wi3">💝</div><div><h3>Made for you</h3><p>Every single set is personal. We speak to you one-to-one, like a friend with great taste who just happens to be excellent with nails.</p></div></div>
+      <div class="why-card fade d4"><div class="why-ico wi4">✅</div><div><h3>Easy &amp; honest</h3><p>Simple to order, fair on price, no fuss. Approachable beauty without the salon markup — the friendliest set in Qatar.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery" style="background:white">
+  <div class="container">
+    <div class="s-head center fade">
+      <div class="s-tag">The work</div>
+      <h2>Fresh from K's hands.</h2>
+      <p class="s-sub">Every set is one-of-a-kind. Drop in your photos to fill this gallery — your clients will love it.</p>
+    </div>
+    <div class="gallery-grid">
+      <div class="gal-item fade d1">
+        <img src="brand_assets/gallery/gallery-1.jpg" alt="Nail it by K collection — nine custom press-on sets">
+        <div class="gal-overlay"><span>The Collection</span></div>
+      </div>
+      <div class="gal-item fade d2">
+        <img src="brand_assets/gallery/gallery-2.jpg" alt="Tortoise shell French tips">
+        <div class="gal-overlay"><span>Tortoise French Tips</span></div>
+      </div>
+      <div class="gal-item fade d3">
+        <img src="brand_assets/gallery/gallery-3.jpg" alt="3D monkey charm nails">
+        <div class="gal-overlay"><span>3D Monkey Charms</span></div>
+      </div>
+      <div class="gal-item fade d1">
+        <img src="brand_assets/gallery/gallery-4.jpg" alt="Pink celestial moon and stars set">
+        <div class="gal-overlay"><span>Celestial Set</span></div>
+      </div>
+      <div class="gal-item fade d2">
+        <img src="brand_assets/gallery/gallery-5.jpg" alt="3D red floral vine nails">
+        <div class="gal-overlay"><span>3D Floral Vines</span></div>
+      </div>
+    </div>
+    <div class="gallery-note fade">
+      <p>Follow <strong>@nail.it.qa</strong> on Instagram for the full gallery 💕</p>
+      <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="btn-primary">View on Instagram ↗</a>
+    </div>
+  </div>
+</section>
+
+<!-- ORDER & PRICING -->
+<section id="pricing" id="order" style="background: var(--grad); padding: 96px 0; position: relative; overflow: hidden;">
+  <div style="position:absolute;width:500px;height:500px;background:rgba(255,255,255,.07);border-radius:50%;top:-160px;right:-120px;pointer-events:none"></div>
+  <div style="position:absolute;width:240px;height:240px;background:rgba(255,255,255,.05);border-radius:50%;bottom:-80px;left:80px;pointer-events:none"></div>
+  <div class="container">
+    <div class="combined-order fade">
+      <div class="co-left">
+        <div class="co-tag">✦ Now taking orders</div>
+        <h2 style="color:white;margin-bottom:14px;">Every set is priced<br>just for you.</h2>
+        <p style="color:rgba(255,255,255,.82);font-size:16px;line-height:1.7;max-width:460px;">Pricing depends on your design, shape, and level of detail — so we keep it personal. DM us with your inspo and we'll send you a quote. No commitment needed.</p>
+      </div>
+      <div class="co-right">
+        <div class="co-pill">💬 It's as easy as sending a message</div>
+        <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="btn-white" style="font-size:15px;padding:15px 36px">DM for Orders &amp; Prices 💌</a>
+        <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="co-ig">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          @nail.it.qa
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="container">
+    <div class="s-head center fade">
+      <div class="s-tag">Questions</div>
+      <h2>Good questions.<br>Easy answers.</h2>
+      <p class="s-sub">Everything you need to know before you order.</p>
+    </div>
+    <div class="faq-grid">
+      <div class="faq-item fade d1"><div class="faq-q" onclick="toggleFaq(this)">How do I order?<div class="faq-ico">+</div></div><div class="faq-a">DM us on Instagram @nail.it.qa with your inspo photos. We'll confirm your order, discuss sizing, and handle everything from there.</div></div>
+      <div class="faq-item fade d2"><div class="faq-q" onclick="toggleFaq(this)">How long does it take?<div class="faq-ico">+</div></div><div class="faq-a">Turnaround time depends on the complexity of the design. We'll give you an estimated timeframe when you place your order — simple sets are always quicker!</div></div>
+      <div class="faq-item fade d3"><div class="faq-q" onclick="toggleFaq(this)">Do you deliver across all of Qatar?<div class="faq-ico">+</div></div><div class="faq-a">Yes! We deliver across Qatar. Delivery is included in all set prices. DM us for details on timings and your specific area.</div></div>
+      <div class="faq-item fade d4"><div class="faq-q" onclick="toggleFaq(this)">Are press-ons reusable?<div class="faq-ico">+</div></div><div class="faq-a">Absolutely. Our gel press-on sets are made to be reapplied. Remove gently, clean, and store safely — they'll look just as good the second time around.</div></div>
+      <div class="faq-item fade d1"><div class="faq-q" onclick="toggleFaq(this)">Can I send my own inspo photos?<div class="faq-ico">+</div></div><div class="faq-a">That's exactly how it works! Send us your saved inspo, a Pinterest board, TikTok screenshots — anything goes. We'll match the vibe and make it yours.</div></div>
+      <div class="faq-item fade d2"><div class="faq-q" onclick="toggleFaq(this)">What shapes and lengths do you offer?<div class="faq-ico">+</div></div><div class="faq-a">We do almond, square, coffin, stiletto, oval and more. Short, medium or long — just let us know your preference when ordering.</div></div>
+      <div class="faq-item fade d3"><div class="faq-q" onclick="toggleFaq(this)">How do I apply them?<div class="faq-ico">+</div></div><div class="faq-a">We include instructions with every order. You can use nail glue for a longer hold, or nail tabs for a gentler option — perfect for events.</div></div>
+      <div class="faq-item fade d4"><div class="faq-q" onclick="toggleFaq(this)">Do you do sets for special occasions?<div class="faq-ico">+</div></div><div class="faq-a">Of course! Weddings, graduations, birthdays, Eid — we love a special occasion set. Order early to make sure your nails are ready in time.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <a href="#" class="foot-logo">
+          <img src="brand_assets/nail logo.jpg" alt="Nail it by K">
+          <span class="foot-logo-t">Nail it<br>by K</span>
+        </a>
+        <p class="foot-tag">Custom gel press-on nails, hand-made to match your inspo and delivered to your door across Qatar.</p>
+        <div class="foot-socials">
+          <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="foot-soc" aria-label="Instagram">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div>
+        <div class="foot-col-t">Navigate</div>
+        <ul class="foot-links">
+          <li><a href="#how">How it Works</a></li>
+          <li><a href="#styles">Styles</a></li>
+          <li><a href="#gallery">Gallery</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="foot-col-t">Get in Touch</div>
+        <ul class="foot-links">
+          <li><a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener">@nail.it.qa</a></li>
+          <li><a href="#order">DM to Order</a></li>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#">Doha, Qatar</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-div"></div>
+    <div class="foot-bot">
+      <p class="foot-copy">© 2026 <span>Nail it by K</span> · All rights reserved · Doha, Qatar</p>
+      <p class="foot-heart">Made with <span style="color:var(--bubblegum);margin:0 2px">♥</span> in Qatar</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Nav scroll
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 20));
+
+  // Mobile menu
+  document.getElementById('ham').onclick = () => document.getElementById('mob').classList.add('open');
+  document.getElementById('mobClose').onclick = closeMob;
+  function closeMob() { document.getElementById('mob').classList.remove('open'); }
+
+  // Scroll fade-in
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.fade').forEach(el => io.observe(el));
+
+  // FAQ
+  function toggleFaq(btn) {
+    const item = btn.parentElement;
+    const open = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!open) item.classList.add('open');
+  }
+</script>
+</body>
+</html>
