@@ -1,0 +1,23 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "statusMessage": "Pushing to GitHub...",
+            "timeout": 30,
+            "command": "$raw = [Console]::In.ReadToEnd(); $data = $raw | ConvertFrom-Json; $file = $data.tool_input.file_path; if ($file -match 'index\\.html|brand_assets') { Set-Location 'C:\\Users\\aisha anjum\\OneDrive\\Documents\\claude website'; git add index.html brand_assets/ 2>$null; $staged = git diff --cached --name-only; if ($staged) { $time = Get-Date -Format 'HH:mm'; git commit -m \"update website - $time\" 2>&1 | Out-Null; git push origin main 2>&1 | Out-Null } }"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git *)"
+    ]
+  }
+}
