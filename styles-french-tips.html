@@ -14,7 +14,7 @@
     <div class="container">
       <div class="topbar">
         <a href="index.html" class="back-link">← Back to home</a>
-        <div class="basket-pill">Basket <span id="basketCount">0</span></div>
+        <button class="basket-pill" type="button">Basket <span id="basketCount">0</span></button>
       </div>
       <div class="page-heading">
         <div class="s-tag" style="justify-content:center; margin-bottom:12px;">French Tips Collection</div>
@@ -39,6 +39,27 @@
         <div class="modal-actions">
           <button class="btn-primary" onclick="addToBasket()">Add to basket</button>
           <button class="btn-secondary" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="basket-modal" id="basketModal" aria-hidden="true">
+    <div class="basket-backdrop" onclick="closeBasketModal()"></div>
+    <div class="basket-panel">
+      <div class="basket-header">
+        <h2>Your Basket</h2>
+        <button class="basket-close" type="button" aria-label="Close basket" onclick="closeBasketModal()">×</button>
+      </div>
+      <div class="basket-content">
+        <div class="basket-empty" id="basketEmpty">Your basket is empty.</div>
+        <ul class="basket-list" id="basketList"></ul>
+      </div>
+      <div class="basket-footer">
+        <div class="basket-total">Items: <span id="basketTotal">0</span></div>
+        <div class="basket-actions">
+          <a href="order.html" class="btn-primary">Checkout</a>
+          <button type="button" class="btn-secondary" onclick="clearBasket()">Clear</button>
         </div>
       </div>
     </div>

@@ -1,8 +1,19 @@
 let basketCount = Number(localStorage.getItem('nailBasketCount') || '0');
+let currentModalProduct = null;
+
+function getBasketItems() {
+  return JSON.parse(localStorage.getItem('nailBasketItems') || '[]');
+}
+
+function setBasketItems(items) {
+  localStorage.setItem('nailBasketItems', JSON.stringify(items));
+  basketCount = items.length;
+  updateBasketCount();
+}
 
 function updateBasketCount() {
   const basketEl = document.getElementById('basketCount');
-  if (basketEl) basketEl.textContent = basketCount;
+  if (basketEl) basketEl.textContent = String(getBasketItems().length);
 }
 
 function showToast(message) {
@@ -18,8 +29,6 @@ let currentGallery = [];
 let currentGalleryIndex = 0;
 
 function updateModalImage(product) {
-  const modal = document.getElementById('productModal');
-  if (!modal) return;
   const imageEl = document.getElementById('modalImage');
   const counterEl = document.getElementById('modalImageCount');
   const titleEl = document.getElementById('modalTitle');
@@ -41,6 +50,7 @@ function updateModalImage(product) {
 function openModal(product) {
   const modal = document.getElementById('productModal');
   if (!modal) return;
+  currentModalProduct = product;
   currentGallery = Array.isArray(product.gallery) && product.gallery.length > 0 ? product.gallery : [product.image];
   currentGalleryIndex = 0;
   updateModalImage(product);
@@ -55,21 +65,73 @@ function closeModal() {
 function nextGalleryImage() {
   if (!currentGallery.length) return;
   currentGalleryIndex = (currentGalleryIndex + 1) % currentGallery.length;
-  updateModalImage();
+  updateModalImage(currentModalProduct);
 }
 
 function prevGalleryImage() {
   if (!currentGallery.length) return;
   currentGalleryIndex = (currentGalleryIndex - 1 + currentGallery.length) % currentGallery.length;
-  updateModalImage();
+  updateModalImage(currentModalProduct);
 }
 
 function addToBasket() {
-  basketCount += 1;
-  localStorage.setItem('nailBasketCount', String(basketCount));
-  updateBasketCount();
+  if (!currentModalProduct) return;
+  const items = getBasketItems();
+  items.push({
+    title: currentModalProduct.title,
+    price: currentModalProduct.price,
+    image: currentModalProduct.gallery?.[0] || currentModalProduct.image,
+  });
+  setBasketItems(items);
   showToast('Added to basket');
   closeModal();
+}
+
+function openBasketModal() {
+  const modal = document.getElementById('basketModal');
+  if (!modal) return;
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  renderBasketList();
+}
+
+function closeBasketModal() {
+  const modal = document.getElementById('basketModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function clearBasket() {
+  setBasketItems([]);
+  renderBasketList();
+}
+
+function renderBasketList() {
+  const items = getBasketItems();
+  const listEl = document.getElementById('basketList');
+  const totalEl = document.getElementById('basketTotal');
+  const emptyEl = document.getElementById('basketEmpty');
+  if (!listEl || !totalEl || !emptyEl) return;
+  listEl.innerHTML = '';
+  if (items.length === 0) {
+    emptyEl.style.display = 'block';
+  } else {
+    emptyEl.style.display = 'none';
+    items.forEach(item => {
+      const listItem = document.createElement('li');
+      listItem.className = 'basket-item';
+      listItem.innerHTML = `
+        <img class="basket-thumb" src="${item.image}" alt="${item.title}">
+        <div class="basket-item-info">
+          <div class="basket-item-title">${item.title}</div>
+          <div class="basket-item-price">${item.price}</div>
+        </div>
+      `;
+      listEl.appendChild(listItem);
+    });
+  }
+  totalEl.textContent = String(items.length);
 }
 
 function renderProducts(products) {
@@ -95,6 +157,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.categoryProducts) {
     renderProducts(window.categoryProducts);
   }
+
+  const basketButtons = document.querySelectorAll('.basket-pill');
+  basketButtons.forEach(button => button.addEventListener('click', openBasketModal));
 
   let touchStartX = 0;
   const modalImage = document.getElementById('modalImage');

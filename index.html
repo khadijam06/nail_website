@@ -66,9 +66,30 @@
     .nav-logo img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; }
     .nav-logo-text { font-family: var(--ff-display); font-weight: 600; font-size: 16px; color: var(--wine); line-height: 1.15; }
     .nav-links { display: none; }
+    .nav-actions { display: inline-flex; align-items: center; gap: 12px; }
+    .btn-basket { display: inline-flex; align-items: center; gap: 8px; padding: 12px 16px; border-radius: 999px; background: white; color: var(--wine); border: 1px solid rgba(124,29,60,.16); font-weight: 700; cursor: pointer; }
+    .btn-basket span { min-width: 24px; min-height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--grad); color: white; font-size: 12px; padding: 0 8px; }
     .nav-cta { display: none; }
     .hamburger { display: flex; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 6px; -webkit-tap-highlight-color: transparent; }
     .hamburger span { display: block; width: 24px; height: 2px; background: var(--wine); border-radius: 2px; }
+    .basket-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 18px; z-index: 300; }
+    .basket-modal.open { display: flex; }
+    .basket-backdrop { position: absolute; inset: 0; background: rgba(46,24,34,.64); backdrop-filter: blur(4px); }
+    .basket-panel { position: relative; z-index: 1; width: min(500px, 100%); max-height: 80vh; overflow: auto; border-radius: 24px; background: white; box-shadow: 0 30px 80px rgba(0,0,0,.22); }
+    .basket-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 22px 24px 0; }
+    .basket-header h2 { font-size: 22px; color: var(--wine); margin: 0; }
+    .basket-close { border: none; background: rgba(245,39,154,.08); color: var(--wine); border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 24px; line-height: 1; }
+    .basket-content { padding: 0 24px 20px; }
+    .basket-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
+    .basket-item { display: flex; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(203,166,217,.2); }
+    .basket-thumb { width: 56px; height: 56px; border-radius: 16px; object-fit: cover; background: rgba(244,234,255,.8); }
+    .basket-item-info { flex: 1; }
+    .basket-item-title { font-weight: 700; color: var(--plum); }
+    .basket-item-price { font-size: 13px; color: var(--mauve); }
+    .basket-empty { color: var(--mauve); padding: 20px 0; text-align: center; }
+    .basket-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 24px 24px; border-top: 1px solid rgba(203,166,217,.18); }
+    .basket-total { font-weight: 700; color: var(--wine); }
+    .basket-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 
     /* ══ MOBILE MENU ══ */
     .mobile-menu {
@@ -329,7 +350,12 @@
     <li><a href="#pricing">Orders &amp; Pricing</a></li>
     <li><a href="#faq">FAQ</a></li>
   </ul>
-  <a href="order.html" class="btn-primary nav-cta">Order Now 💅</a>
+  <div class="nav-actions">
+    <a href="order.html" class="btn-primary nav-cta">Order Now 💅</a>
+    <button id="basketToggle" class="btn-basket" type="button" aria-label="Open basket">
+      🛒 <span id="basketCount">0</span>
+    </button>
+  </div>
   <button class="hamburger" id="ham" aria-label="Open menu">
     <span></span><span></span><span></span>
   </button>
@@ -344,6 +370,27 @@
   <a href="#pricing" onclick="closeMob()">Orders &amp; Pricing</a>
   <a href="#faq" onclick="closeMob()">FAQ</a>
   <a href="order.html" onclick="closeMob()" class="btn-primary" style="margin-top:8px">Order Now 💅</a>
+</div>
+
+<div class="basket-modal" id="basketModal" aria-hidden="true">
+  <div class="basket-backdrop" onclick="closeBasketModal()"></div>
+  <div class="basket-panel">
+    <div class="basket-header">
+      <h2>Your Basket</h2>
+      <button class="basket-close" type="button" aria-label="Close basket" onclick="closeBasketModal()">×</button>
+    </div>
+    <div class="basket-content">
+      <div class="basket-empty" id="basketEmpty">Your basket is empty.</div>
+      <ul class="basket-list" id="basketList"></ul>
+    </div>
+    <div class="basket-footer">
+      <div class="basket-total">Items: <span id="basketTotal">0</span></div>
+      <div class="basket-actions">
+        <a href="order.html" class="btn-primary">Checkout</a>
+        <button type="button" class="btn-secondary" onclick="clearBasket()">Clear</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- HERO -->
@@ -640,6 +687,67 @@
     document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
     if (!open) item.classList.add('open');
   }
+
+  function getBasketItems() {
+    return JSON.parse(localStorage.getItem('nailBasketItems') || '[]');
+  }
+
+  function updateBasketCount() {
+    const basketCount = getBasketItems().length;
+    const basketCountEl = document.getElementById('basketCount');
+    if (basketCountEl) basketCountEl.textContent = String(basketCount);
+  }
+
+  function renderBasketList() {
+    const items = getBasketItems();
+    const listEl = document.getElementById('basketList');
+    const totalEl = document.getElementById('basketTotal');
+    const emptyEl = document.getElementById('basketEmpty');
+    if (!listEl || !totalEl || !emptyEl) return;
+    listEl.innerHTML = '';
+    if (items.length === 0) {
+      emptyEl.style.display = 'block';
+    } else {
+      emptyEl.style.display = 'none';
+      items.forEach(item => {
+        const listItem = document.createElement('li');
+        listItem.className = 'basket-item';
+        listItem.innerHTML = `
+          <img class="basket-thumb" src="${item.image || 'brand_assets/nail logo.jpg'}" alt="${item.title}">
+          <div class="basket-item-info">
+            <div class="basket-item-title">${item.title}</div>
+            <div class="basket-item-price">${item.price}</div>
+          </div>
+        `;
+        listEl.appendChild(listItem);
+      });
+    }
+    totalEl.textContent = String(items.length);
+  }
+
+  function openBasketModal() {
+    const modal = document.getElementById('basketModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    renderBasketList();
+  }
+
+  function closeBasketModal() {
+    const modal = document.getElementById('basketModal');
+    if (!modal) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  function clearBasket() {
+    localStorage.setItem('nailBasketItems', JSON.stringify([]));
+    updateBasketCount();
+    renderBasketList();
+  }
+
+  document.getElementById('basketToggle').onclick = openBasketModal;
+  document.addEventListener('DOMContentLoaded', updateBasketCount);
 </script>
 </body>
 </html>
