@@ -40,6 +40,32 @@ function toCloudinaryContext(contextObj) {
     .join('|');
 }
 
+async function setImageMetadata(cloudinary, publicId, contextObj, tags) {
+  const context = toCloudinaryContext(contextObj);
+  if (context) {
+    await cloudinary.uploader.add_context(context, [publicId], {
+      type: 'upload',
+      resource_type: 'image',
+    });
+  }
+
+  await cloudinary.uploader.remove_all_tags([publicId], {
+    type: 'upload',
+    resource_type: 'image',
+  });
+
+  const cleanTags = Array.isArray(tags)
+    ? tags.map((tag) => sanitizeText(tag, 120)).filter(Boolean)
+    : [];
+
+  if (cleanTags.length) {
+    await cloudinary.uploader.add_tag(cleanTags.join(','), [publicId], {
+      type: 'upload',
+      resource_type: 'image',
+    });
+  }
+}
+
 function toBool(value) {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'number') return value === 1;
@@ -322,11 +348,7 @@ async function rollbackImageStates(cloudinary, snapshots, publicIds) {
     if (!state) continue;
 
     try {
-      await cloudinary.uploader.explicit(publicId, {
-        type: 'upload',
-        context: toCloudinaryContext(state.context),
-        tags: state.tags,
-      });
+      await setImageMetadata(cloudinary, publicId, state.context, state.tags);
     } catch (error) {
       failures.push({ publicId, error: error?.message || 'Rollback failed' });
     }
@@ -347,17 +369,18 @@ async function applyProductContextToImages(cloudinary, product) {
     const image = product.images[index];
 
     try {
-      await cloudinary.uploader.explicit(image.publicId, {
-        type: 'upload',
-        context: toCloudinaryContext(contextForImage(product, image, index)),
-        tags: [
+      await setImageMetadata(
+        cloudinary,
+        image.publicId,
+        contextForImage(product, image, index),
+        [
           'nailit_product',
           `product:${product.id}`,
           `category:${slug(product.category)}`,
           `status:${product.status}`,
           product.isCategoryCover ? `cover:${slug(product.category)}` : '',
-        ].filter(Boolean),
-      });
+        ],
+      );
       updated.push(image.publicId);
     } catch (error) {
       const rollbackFailures = await rollbackImageStates(cloudinary, snapshots, updated);
