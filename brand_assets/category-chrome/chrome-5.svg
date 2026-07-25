@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fbf0ff"/><stop offset="100%" stop-color="#d8c9ff"/></linearGradient></defs>
+  <rect width="800" height="600" fill="url(#g)"/>
+  <circle cx="400" cy="300" r="220" fill="#efd9ff" stroke="#8456c7" stroke-width="14"/>
+  <text x="400" y="300" text-anchor="middle" fill="#4d2c71" font-family="Mulish, sans-serif" font-size="46" font-weight="700">Chrome</text>
+  <text x="400" y="350" text-anchor="middle" fill="#7e5cb3" font-family="Mulish, sans-serif" font-size="20">Placeholder 5</text>
+</svg>

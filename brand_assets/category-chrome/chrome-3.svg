@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#f8e9ff"/>
+  <circle cx="400" cy="300" r="220" fill="#fde8ff" stroke="#925f94" stroke-width="14"/>
+  <text x="400" y="290" text-anchor="middle" fill="#6d3968" font-family="Mulish, sans-serif" font-size="46" font-weight="700">Chrome</text>
+  <text x="400" y="350" text-anchor="middle" fill="#7f4f8d" font-family="Mulish, sans-serif" font-size="20">Image placeholder</text>
+</svg>

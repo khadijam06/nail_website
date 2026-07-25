@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#fff0f8"/>
+  <ellipse cx="400" cy="320" rx="260" ry="180" fill="#f8d3f3" stroke="#a14f8a" stroke-width="16"/>
+  <text x="400" y="300" text-anchor="middle" fill="#682e61" font-family="Mulish, sans-serif" font-size="44" font-weight="700">Chrome</text>
+  <text x="400" y="360" text-anchor="middle" fill="#8f4f8c" font-family="Mulish, sans-serif" font-size="20">Placeholder 6</text>
+</svg>
