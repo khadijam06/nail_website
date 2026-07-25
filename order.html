@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Place An Order — Nail it by K · Custom Gel Press-ons · Qatar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pridi:wght@300;400;600&family=Mulish:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* ══ VARIABLES ══ */
+    :root {
+      --lilac: #CBA6D9; --orchid: #E58FC9; --bubblegum: #FF82BE;
+      --flamingo: #FF5AA6; --magenta: #F5279A; --wine: #7C1D3C;
+      --plum: #2E1822; --cream: #FBF3EF; --mauve: #957F8A; --gold: #D9A86A;
+      --grad: linear-gradient(168deg,#CBA6D9,#E58FC9,#FF5AA6,#F5279A);
+      --grad-soft: linear-gradient(168deg,#CBA6D9 0%,#E58FC9 60%,#FF82BE 100%);
+      --ff-display: 'Pridi', serif; --ff-body: 'Mulish', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body { font-family: var(--ff-body); color: var(--plum); background: var(--cream); overflow-x: hidden; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 18px; }
+
+    /* ══ NAV ══ */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 12px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(251,243,239,.93);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(203,166,217,.2);
+      transition: box-shadow .3s;
+    }
+    nav.scrolled { box-shadow: 0 4px 24px rgba(245,39,154,.08); }
+    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .nav-logo img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; }
+    .nav-logo-text { font-family: var(--ff-display); font-weight: 600; font-size: 16px; color: var(--wine); line-height: 1.15; }
+    .nav-links { display: none; }
+    .nav-cta { display: none; }
+    .hamburger { display: flex; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 6px; -webkit-tap-highlight-color: transparent; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--wine); border-radius: 2px; }
+
+    /* ══ BUTTONS ══ */
+    .btn-primary {
+      background: var(--grad); color: white; border: none;
+      padding: 15px 28px; border-radius: 100px;
+      font-family: var(--ff-body); font-weight: 700; font-size: 15px;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      transition: transform .2s, box-shadow .2s; white-space: nowrap;
+      -webkit-tap-highlight-color: transparent; min-height: 50px;
+    }
+    .btn-secondary {
+      background: white; color: var(--wine); border: 2px solid var(--wine);
+      padding: 13px 28px; border-radius: 100px;
+      font-family: var(--ff-body); font-weight: 700; font-size: 15px;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      -webkit-tap-highlight-color: transparent; min-height: 50px;
+    }
+
+    /* ══ HEADER ══ */
+    .page-header {
+      min-height: 60svh; display: flex; align-items: center;
+      position: relative; overflow: hidden;
+      padding-top: 68px; padding-bottom: 40px;
+      background: var(--cream); text-align: center;
+    }
+    .blob { position: absolute; border-radius: 60% 40% 30% 70%/60% 30% 70% 40%; animation: morph 8s ease-in-out infinite; pointer-events: none; }
+    .blob-1 { width: 280px; height: 280px; background: var(--grad-soft); top: -80px; right: -70px; opacity: .2; }
+    .blob-2 { width: 220px; height: 220px; background: radial-gradient(circle,var(--lilac),transparent 70%); bottom: -50px; left: -60px; opacity: .3; animation-duration: 11s; animation-direction: reverse; }
+
+    @keyframes morph { 0%,100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%}50%{border-radius:30% 60% 70% 40%/50% 60% 30% 60%} }
+
+    .header-inner { position: relative; z-index: 1; }
+    h1 { font-family: var(--ff-display); font-weight: 600; font-size: 36px; line-height: 1.1; color: var(--wine); margin-bottom: 14px; }
+    h1 em { font-style: normal; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .header-sub { font-size: 15px; color: var(--mauve); line-height: 1.7; margin-bottom: 28px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+    /* ══ SECTIONS ══ */
+    section { padding: 48px 0; }
+    .s-tag { display: inline-flex; align-items: center; gap: 7px; font-weight: 900; font-size: 10px; color: var(--magenta); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 12px; }
+    .s-tag::before { content: ''; display: block; width: 16px; height: 2px; background: var(--magenta); border-radius: 2px; }
+    h2 { font-family: var(--ff-display); font-weight: 600; font-size: 28px; color: var(--wine); line-height: 1.15; margin-bottom: 12px; }
+    .s-sub { font-size: 14px; color: var(--mauve); line-height: 1.7; }
+    .s-head { margin-bottom: 32px; }
+    .s-head.center { text-align: center; }
+
+    /* ══ SIZING GUIDE ══ */
+    .sizing-intro { background: white; border-radius: 20px; padding: 28px 20px; border: 1px solid rgba(203,166,217,.2); margin-bottom: 28px; }
+    .sizing-intro h3 { font-family: var(--ff-display); font-weight: 600; font-size: 18px; color: var(--wine); margin-bottom: 12px; }
+    .sizing-intro p { font-size: 13px; color: var(--mauve); line-height: 1.7; margin-bottom: 10px; }
+    .sizing-intro .highlight { background: rgba(245,39,154,.08); padding: 12px 16px; border-radius: 12px; margin: 14px 0; font-weight: 600; color: var(--wine); }
+
+    /* ══ SIZING PHOTOS ══ */
+    .sizing-photos { margin: 28px 0; }
+    .sizing-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .sizing-card { background: white; border-radius: 16px; overflow: hidden; border: 1px solid rgba(203,166,217,.2); padding-bottom: 14px; }
+    .sizing-image { width: 100%; height: 240px; object-fit: cover; display: block; }
+    .sizing-label { padding: 12px 16px; font-weight: 600; font-size: 13px; color: var(--wine); text-align: center; }
+
+    /* ══ FORM STYLES ══ */
+    .form-section { background: white; border-radius: 20px; padding: 28px 20px; border: 1px solid rgba(203,166,217,.2); margin-bottom: 24px; }
+    .form-section h3 { font-family: var(--ff-display); font-weight: 600; font-size: 18px; color: var(--wine); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .form-section-icon { font-size: 22px; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group:last-child { margin-bottom: 0; }
+    label { display: block; font-weight: 600; font-size: 13px; color: var(--wine); margin-bottom: 6px; }
+    .required { color: var(--magenta); }
+
+    .file-upload-wrapper {
+      border: 2px dashed rgba(203,166,217,.4); border-radius: 14px;
+      padding: 20px 16px; text-align: center; cursor: pointer;
+      transition: all .3s; background: rgba(203,166,217,.05);
+    }
+    .file-upload-wrapper:hover { border-color: var(--magenta); background: rgba(245,39,154,.05); }
+    .file-upload-wrapper input[type="file"] { display: none; }
+    .upload-text { font-size: 13px; color: var(--mauve); margin-bottom: 6px; }
+    .upload-hint { font-size: 11px; color: rgba(157,127,138,.6); }
+
+    input[type="text"], input[type="email"], input[type="tel"], select, textarea {
+      width: 100%; padding: 12px 14px; border: 1px solid rgba(203,166,217,.3);
+      border-radius: 10px; font-family: var(--ff-body); font-size: 13px;
+      color: var(--plum); transition: border-color .2s;
+    }
+    input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--magenta); box-shadow: 0 0 0 3px rgba(245,39,154,.1);
+    }
+    textarea { resize: vertical; min-height: 100px; font-family: var(--ff-body); }
+
+    .radio-group { display: flex; flex-direction: column; gap: 10px; }
+    .radio-option { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .radio-option input[type="radio"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--magenta); }
+    .radio-option label { margin: 0; cursor: pointer; font-weight: 500; }
+
+    .file-preview { background: rgba(245,39,154,.06); border: 1px solid rgba(245,39,154,.2); border-radius: 10px; padding: 10px 12px; font-size: 12px; color: var(--wine); margin-top: 6px; display: flex; align-items: center; justify-content: space-between; }
+    .file-preview .remove-file { cursor: pointer; color: var(--magenta); font-weight: 600; }
+
+    /* ══ SUBMISSION ══ */
+    .form-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 28px; }
+    .form-actions button { width: 100%; padding: 16px; font-size: 15px; }
+    .form-note { font-size: 12px; color: var(--mauve); text-align: center; margin-top: 14px; }
+
+    /* ══ SUCCESS MESSAGE ══ */
+    .success-box { background: rgba(76,175,80,.08); border: 1px solid rgba(76,175,80,.3); border-radius: 12px; padding: 16px; text-align: center; color: #2e7d32; font-weight: 600; display: none; }
+    .success-box.show { display: block; }
+
+    /* ══ FOOTER ══ */
+    footer { background: var(--plum); padding: 40px 0 24px; margin-top: 60px; }
+    .foot-top { display: flex; flex-direction: column; gap: 28px; margin-bottom: 28px; }
+    .foot-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; text-decoration: none; }
+    .foot-logo img { width: 40px; height: 40px; border-radius: 10px; }
+    .foot-logo-t { font-family: var(--ff-display); font-weight: 600; font-size: 16px; color: white; line-height: 1.15; }
+    .foot-tag { font-size: 13px; color: rgba(255,255,255,.55); line-height: 1.6; margin-bottom: 16px; }
+    .foot-div { height: 1px; background: rgba(255,255,255,.08); margin-bottom: 20px; }
+    .foot-bot { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+    .foot-copy { font-size: 11px; color: rgba(255,255,255,.4); }
+    .foot-copy span { color: var(--bubblegum); }
+    .foot-heart { font-size: 11px; color: rgba(255,255,255,.4); display: flex; align-items: center; gap: 4px; }
+
+    /* ══ ANIMATIONS ══ */
+    .fade { opacity: 0; transform: translateY(22px); transition: opacity .5s ease, transform .5s ease; }
+    .fade.in { opacity: 1; transform: none; }
+
+    /* ══ TABLET 600px+ ══ */
+    @media (min-width: 600px) {
+      .container { padding: 0 24px; }
+      section { padding: 56px 0; }
+      h1 { font-size: 46px; }
+      h2 { font-size: 34px; }
+      .sizing-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+      .form-actions { flex-direction: row; justify-content: center; gap: 16px; }
+      .form-actions button { width: auto; }
+    }
+
+    /* ══ DESKTOP 1024px+ ══ */
+    @media (min-width: 1024px) {
+      .container { padding: 0 32px; }
+      section { padding: 80px 0; }
+      nav { padding: 14px 32px; }
+      .nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
+      .nav-links a { text-decoration: none; font-weight: 700; font-size: 13px; color: var(--plum); letter-spacing: .02em; transition: color .2s; }
+      .nav-links a:hover { color: var(--magenta); }
+      .nav-cta { display: inline-flex; }
+      .hamburger { display: none; }
+      .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245,39,154,.35); }
+      .btn-secondary:hover { background: var(--wine); color: white; }
+
+      h1 { font-size: clamp(48px,5.5vw,76px); line-height: 1.06; }
+      h2 { font-size: clamp(32px,3.6vw,50px); }
+      .page-header { min-height: 50svh; text-align: left; }
+      .sizing-grid { grid-template-columns: repeat(3, 1fr); }
+      .form-section { padding: 36px 32px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="index.html" class="nav-logo">
+    <img src="brand_assets/nail logo.jpg" alt="Nail it by K logo">
+    <span class="nav-logo-text">Nail it<br>by K</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html#how">How it Works</a></li>
+    <li><a href="index.html#styles">Styles</a></li>
+    <li><a href="index.html#gallery">Gallery</a></li>
+    <li><a href="index.html#pricing">Orders</a></li>
+    <li><a href="index.html#faq">FAQ</a></li>
+  </ul>
+  <a href="order.html" class="btn-primary nav-cta" style="background:white;color:var(--wine)">Order Now 💅</a>
+  <button class="hamburger" id="ham" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HEADER -->
+<section class="page-header">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="container">
+    <div class="header-inner">
+      <div class="s-tag">Let's get started</div>
+      <h1>Place your <em>custom order</em></h1>
+      <p class="header-sub">Send us your sizing photos and inspiration, and we'll craft your perfect nail set. Just a few simple steps to salon-quality nails at your door.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SIZING GUIDE -->
+<section>
+  <div class="container">
+    <div class="s-head center fade">
+      <h2>Step 1: How to Size Your Nails</h2>
+      <p class="s-sub" style="margin-top:8px">Accurate sizing is key to making sure your nails fit perfectly</p>
+    </div>
+
+    <div class="sizing-intro fade">
+      <h3>📸 Sizing Instructions</h3>
+      <p><strong>What you'll need:</strong> A Qatari coin (any Dirham) to use as a reference for size</p>
+      <div class="highlight">
+        ✓ Place the coin next to each nail to show size reference<br>
+        ✓ Take clear photos of sizing for BOTH hands<br>
+        ✓ Make sure lighting is good and nails are visible
+      </div>
+      <p><strong>How to photograph:</strong> Hold your hand flat, place the Qatari coin next to each finger, and take a clear photo. We'll use this to craft the perfect fit for your nails.</p>
+    </div>
+
+    <div class="sizing-photos fade">
+      <h3 style="text-align:center; margin-bottom:20px; font-family:var(--ff-display); font-weight:600; font-size:18px; color:var(--wine)">Reference Examples</h3>
+      <div class="sizing-grid">
+        <div class="sizing-card">
+          <img src="brand_assets/sizing-reference/sizing-1.jpg" alt="Sizing reference photo 1 — single finger" class="sizing-image">
+          <div class="sizing-label">Single Finger Shot</div>
+        </div>
+        <div class="sizing-card">
+          <img src="brand_assets/sizing-reference/sizing-2.jpg" alt="Sizing reference photo 2 — two fingers" class="sizing-image">
+          <div class="sizing-label">Two Fingers Shot</div>
+        </div>
+        <div class="sizing-card">
+          <img src="brand_assets/sizing-reference/sizing-3.jpg" alt="Sizing reference photo 3 — hand spread" class="sizing-image">
+          <div class="sizing-label">Full Hand Reference</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ORDER FORM -->
+<section style="background:white">
+  <div class="container">
+    <form id="orderForm">
+      <!-- SIZING UPLOAD -->
+      <div class="form-section fade">
+        <h3><span class="form-section-icon">📏</span> Your Sizing Photos</h3>
+        
+        <div class="form-group">
+          <label>Left Hand Sizing Photos <span class="required">*</span></label>
+          <p style="font-size:12px; color:var(--mauve); margin-bottom:10px">Upload 2-3 clear photos of your left hand with a Qatari coin for reference</p>
+          <div class="file-upload-wrapper" onclick="document.getElementById('leftHand').click()">
+            <input type="file" id="leftHand" name="leftHand" accept="image/*" multiple required>
+            <div class="upload-text">📸 Click to upload or drag files</div>
+            <div class="upload-hint">JPG, PNG up to 10MB each</div>
+          </div>
+          <div id="leftHandPreview"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Right Hand Sizing Photos <span class="required">*</span></label>
+          <p style="font-size:12px; color:var(--mauve); margin-bottom:10px">Upload 2-3 clear photos of your right hand with a Qatari coin for reference</p>
+          <div class="file-upload-wrapper" onclick="document.getElementById('rightHand').click()">
+            <input type="file" id="rightHand" name="rightHand" accept="image/*" multiple required>
+            <div class="upload-text">📸 Click to upload or drag files</div>
+            <div class="upload-hint">JPG, PNG up to 10MB each</div>
+          </div>
+          <div id="rightHandPreview"></div>
+        </div>
+      </div>
+
+      <!-- INSPIRATION PHOTOS -->
+      <div class="form-section fade">
+        <h3><span class="form-section-icon">✨</span> Inspiration Photos (Optional)</h3>
+        <p style="font-size:13px; color:var(--mauve); margin-bottom:16px">Share any nail designs, colors, or styles you love. We'll match the vibe and make it uniquely yours!</p>
+        
+        <div class="form-group">
+          <label>Upload Inspiration Pictures</label>
+          <p style="font-size:12px; color:var(--mauve); margin-bottom:10px">Pinterest screenshots, Instagram posts, TikTok saves — anything that inspires you</p>
+          <div class="file-upload-wrapper" onclick="document.getElementById('inspiration').click()">
+            <input type="file" id="inspiration" name="inspiration" accept="image/*" multiple>
+            <div class="upload-text">🎨 Click to upload or drag files</div>
+            <div class="upload-hint">JPG, PNG up to 10MB each</div>
+          </div>
+          <div id="inspirationPreview"></div>
+        </div>
+      </div>
+
+      <!-- CUSTOMER DETAILS -->
+      <div class="form-section fade">
+        <h3><span class="form-section-icon">📋</span> Your Details</h3>
+        
+        <div class="form-group">
+          <label for="phone">Phone Number <span class="required">*</span></label>
+          <input type="tel" id="phone" name="phone" placeholder="+974 XXXX XXXX" required>
+        </div>
+
+        <div class="form-group">
+          <label for="specialRequests">Special Requests or Comments</label>
+          <textarea id="specialRequests" name="specialRequests" placeholder="Any specific colors, shapes, lengths, or design details you'd like? Let us know!"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Preferred Delivery Method <span class="required">*</span></label>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" id="pickup" name="delivery" value="pickup" required>
+              <label for="pickup">Pickup</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="delivery" name="delivery" value="delivery" required>
+              <label for="delivery">Delivery (Qatar-wide)</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUCCESS MESSAGE -->
+      <div class="success-box" id="successBox">
+        ✅ Order submitted! We'll review your photos and contact you soon with next steps.
+      </div>
+
+      <!-- SUBMIT BUTTON -->
+      <div class="form-actions fade">
+        <button type="submit" class="btn-primary">Submit Your Order 💌</button>
+        <a href="index.html" class="btn-secondary">Back to Home</a>
+      </div>
+      <p class="form-note">Once you submit, we'll review your sizing and inspiration photos. We'll contact you at the phone number provided within 24 hours to confirm details and pricing.</p>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <a href="index.html" class="foot-logo">
+          <img src="brand_assets/nail logo.jpg" alt="Nail it by K">
+          <span class="foot-logo-t">Nail it<br>by K</span>
+        </a>
+        <p class="foot-tag">Custom gel press-on nails, hand-made to match your inspo and delivered to your door across Qatar.</p>
+      </div>
+    </div>
+    <div class="foot-div"></div>
+    <div class="foot-bot">
+      <p class="foot-copy">© 2026 <span>Nail it by K</span> · All rights reserved · Doha, Qatar</p>
+      <p class="foot-heart">Made with <span style="color:var(--bubblegum);margin:0 2px">♥</span> in Qatar</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Nav scroll
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 20));
+
+  // File upload handlers
+  const fileInputs = ['leftHand', 'rightHand', 'inspiration'];
+  fileInputs.forEach(inputId => {
+    const input = document.getElementById(inputId);
+    const previewId = inputId + 'Preview';
+    
+    input.addEventListener('change', function(e) {
+      const preview = document.getElementById(previewId);
+      preview.innerHTML = '';
+      if (this.files.length > 0) {
+        for (let file of this.files) {
+          const fileDiv = document.createElement('div');
+          fileDiv.className = 'file-preview';
+          fileDiv.innerHTML = `
+            <span>✓ ${file.name} (${(file.size / 1024).toFixed(0)} KB)</span>
+            <span class="remove-file" onclick="this.parentElement.remove()">Remove</span>
+          `;
+          preview.appendChild(fileDiv);
+        }
+      }
+    });
+
+    // Drag and drop
+    const wrapper = input.parentElement;
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      wrapper.addEventListener(eventName, preventDefaults, false);
+    });
+    function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+    ['dragenter', 'dragover'].forEach(eventName => {
+      wrapper.addEventListener(eventName, () => wrapper.style.background = 'rgba(245,39,154,.1)', false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+      wrapper.addEventListener(eventName, () => wrapper.style.background = 'rgba(203,166,217,.05)', false);
+    });
+    wrapper.addEventListener('drop', (e) => { input.files = e.dataTransfer.files; input.dispatchEvent(new Event('change')); }, false);
+  });
+
+  // Form submission
+  document.getElementById('orderForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Collect form data
+    const formData = new FormData(this);
+    
+    // In a real application, you would send this to a server
+    // For now, show success message and log the data
+    console.log('Order submitted with data:', {
+      phone: formData.get('phone'),
+      specialRequests: formData.get('specialRequests'),
+      delivery: formData.get('delivery'),
+      leftHandFiles: formData.getAll('leftHand').length,
+      rightHandFiles: formData.getAll('rightHand').length,
+      inspirationFiles: formData.getAll('inspiration').length
+    });
+
+    // Show success message
+    const successBox = document.getElementById('successBox');
+    successBox.classList.add('show');
+    
+    // Scroll to success message
+    setTimeout(() => {
+      successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+
+    // Reset form after 2 seconds
+    setTimeout(() => {
+      this.reset();
+      successBox.classList.remove('show');
+      // Clear all file previews
+      fileInputs.forEach(inputId => {
+        document.getElementById(inputId + 'Preview').innerHTML = '';
+      });
+    }, 3000);
+  });
+
+  // Scroll fade-in
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.fade').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
