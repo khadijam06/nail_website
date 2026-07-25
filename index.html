@@ -500,20 +500,20 @@
       <p class="s-sub">From everyday classics to statement sets — if you can dream it, we can nail it.</p>
     </div>
     <div class="styles-grid">
-      <a href="styles-chrome.html" class="style-card fade d1">
-        <img src="brand_assets/style-cards/chrome.jpg" alt="Chrome style preview">
+      <a href="styles-chrome.html" class="style-card fade d1" data-cover-category="Chrome">
+        <img src="brand_assets/style-cards/chrome.jpg" alt="Chrome style preview" data-cover-image="Chrome">
         <div class="style-info"><h3>Chrome</h3><p>Reflective, ultra-glossy finish</p></div>
       </a>
-      <a href="styles-french-tips.html" class="style-card fade d2">
-        <img src="brand_assets/style-cards/french-tips.jpg" alt="French Tips style preview">
+      <a href="styles-french-tips.html" class="style-card fade d2" data-cover-category="French Tips">
+        <img src="brand_assets/style-cards/french-tips.jpg" alt="French Tips style preview" data-cover-image="French Tips">
         <div class="style-info"><h3>French Tips</h3><p>Classic clean lines, your way</p></div>
       </a>
-      <a href="styles-cateye.html" class="style-card fade d3">
-        <img src="brand_assets/style-cards/cateye.jpg" alt="Cateye style preview">
+      <a href="styles-cateye.html" class="style-card fade d3" data-cover-category="Cateye">
+        <img src="brand_assets/style-cards/cateye.jpg" alt="Cateye style preview" data-cover-image="Cateye">
         <div class="style-info"><h3>Cateye</h3><p>Sculpted curves with a luxe finish</p></div>
       </a>
-      <a href="styles-3d-art.html" class="style-card fade d1">
-        <img src="brand_assets/style-cards/3d-art.jpg" alt="3D Art style preview">
+      <a href="styles-3d-art.html" class="style-card fade d1" data-cover-category="3D Art">
+        <img src="brand_assets/style-cards/3d-art.jpg" alt="3D Art style preview" data-cover-image="3D Art">
         <div class="style-info"><h3>3D Art</h3><p>Gems, charms &amp; dimensional detail</p></div>
       </a>
     </div>
@@ -729,33 +729,69 @@
   document.getElementById('basketToggle').onclick = openBasketModal;
   document.addEventListener('DOMContentLoaded', () => {
     updateBasketCount();
-    loadGalleryImages();
+    loadCmsHomepage();
   });
 
-  async function loadGalleryImages() {
+  function applyCategoryCovers(covers) {
+    if (!covers || typeof covers !== 'object') return;
+    document.querySelectorAll('[data-cover-image]').forEach((imgEl) => {
+      const category = imgEl.getAttribute('data-cover-image');
+      const cover = covers[category];
+      if (cover && cover.imageUrl) {
+        imgEl.src = cover.imageUrl;
+      }
+    });
+  }
+
+  function renderGalleryFromProducts(products) {
     const grid = document.getElementById('galleryGrid');
     const message = document.getElementById('galleryMessage');
-    if (!grid) return;
+    if (!grid || !message) return;
+
+    const allImages = [];
+    (products || []).forEach((product) => {
+      const images = Array.isArray(product.images) ? product.images : [];
+      images.forEach((img) => {
+        if (img && img.url) {
+          allImages.push({
+            title: product.title || 'Nail set',
+            url: img.url,
+          });
+        }
+      });
+    });
+
+    if (!allImages.length) {
+      grid.innerHTML = '<p style="color:var(--mauve);grid-column:span 2;text-align:center;">No gallery items are published yet.</p>';
+      message.style.display = 'block';
+      return;
+    }
+
+    grid.innerHTML = allImages.slice(0, 6).map(img => `
+      <div class="gal-item fade d1">
+        <img src="${img.url}" alt="${img.title}">
+        <div class="gal-overlay"><span>${img.title}</span></div>
+      </div>
+    `).join('');
+    message.style.display = 'block';
+  }
+
+  async function loadCmsHomepage() {
+    const grid = document.getElementById('galleryGrid');
+    const message = document.getElementById('galleryMessage');
+    if (!grid || !message) return;
+
     try {
-      const res = await fetch('/api/gallery');
+      const res = await fetch('/api/products?sort=newest');
       const data = await res.json();
-      if (!res.ok || !data.images) throw new Error(data.error || 'Unable to load gallery');
-      grid.innerHTML = data.images.slice(0, 6).map(img => `
-        <div class="gal-item fade d1">
-          <img src="${img.url}" alt="${img.title || 'Gallery image'}">
-          <div class="gal-overlay"><span>${img.title || 'Nail set'}</span></div>
-        </div>
-      `).join('');
-      if (data.images.length === 0) {
-        grid.innerHTML = '<p style="color:var(--mauve);grid-column:span 2;text-align:center;">No gallery items are published yet.</p>';
-        message.style.display = 'block';
-      } else {
-        message.style.display = 'block';
-      }
+      if (!res.ok) throw new Error(data.error || 'Unable to load products');
+
+      applyCategoryCovers(data.categoryCovers || {});
+      renderGalleryFromProducts(data.products || []);
     } catch (error) {
+      console.error(error);
       grid.innerHTML = '<p style="color:var(--mauve);grid-column:span 2;text-align:center;">Unable to load gallery right now.</p>';
       message.style.display = 'block';
-      console.error(error);
     }
   }
 </script>

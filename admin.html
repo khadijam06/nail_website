@@ -3,118 +3,210 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard — Nail it by K</title>
+  <title>Admin CMS - Nail it by K</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pridi:wght@300;400;600&family=Mulish:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#fcf5ff; --panel:#ffffff; --accent:#f5279a; --text:#3b1b35; --muted:#7d5b7b; --border:rgba(199,157,183,.35); }
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Mulish',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-    .page{max-width:1200px;margin:0 auto;padding:24px;}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;}
-    .topbar h1{font-family:'Pridi',serif;font-size:28px;}
-    .card{background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:24px;box-shadow:0 20px 50px rgba(245,39,154,.08);margin-bottom:24px;}
-    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-    .field{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
-    label{font-weight:700;color:var(--muted);font-size:14px;}
-    input,select,textarea{border:1px solid var(--border);border-radius:14px;padding:14px 16px;font-size:14px;color:var(--text);background:#fff;}
-    textarea{resize:vertical;min-height:120px;}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 22px;border:none;border-radius:999px;font-weight:700;cursor:pointer;background:linear-gradient(168deg,#CBA6D9,#E58FC9,#FF5AA6,#F5279A);color:#fff;}
-    .btn-secondary{background:#fff;color:var(--accent);border:1px solid var(--accent);}
-    .btn-link{background:transparent;color:var(--accent);padding:0;}
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
-    .panel-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid var(--border);}
-    .panel-row:last-child{border-bottom:none;}
-    .panel-row img{width:84px;height:84px;object-fit:cover;border-radius:18px;}
-    .panel-content{flex:1;min-width:0;}
-    .panel-title{font-size:16px;font-weight:700;margin-bottom:4px;}
-    .panel-meta{font-size:13px;color:var(--muted);margin-bottom:8px;}
-    .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(245,39,154,.08);color:var(--accent);font-weight:700;font-size:12px;}
-    .toast{position:fixed;bottom:24px;right:24px;padding:14px 18px;border-radius:999px;background:var(--accent);color:#fff;box-shadow:0 18px 40px rgba(0,0,0,.16);display:none;}
-    .toast.show{display:block;}
-    .status-message{display:none;padding:12px 14px;border-radius:14px;margin-bottom:16px;font-size:14px;font-weight:700;border:1px solid transparent;}
-    .status-message.info{display:block;background:rgba(203,166,217,.16);color:var(--wine);border-color:rgba(203,166,217,.35);} 
-    .status-message.success{display:block;background:rgba(40,167,69,.12);color:#155724;border-color:rgba(40,167,69,.25);} 
-    .status-message.error{display:block;background:rgba(220,53,69,.10);color:#842029;border-color:rgba(220,53,69,.24);} 
-    @media(max-width:900px){.form-grid,.grid{grid-template-columns:1fr;}.topbar{flex-direction:column;align-items:flex-start;}}
+    :root { --bg:#fcf5ff; --panel:#ffffff; --accent:#f5279a; --text:#3b1b35; --muted:#7d5b7b; --border:rgba(199,157,183,.35); --ok:#1f7a39; --danger:#96253f; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Mulish',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    .page { max-width:1280px; margin:0 auto; padding:24px; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    .topbar h1 { font-family:'Pridi',serif; font-size:30px; }
+    .top-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .card { background:var(--panel); border:1px solid var(--border); border-radius:24px; padding:20px; box-shadow:0 14px 42px rgba(245,39,154,.07); margin-bottom:16px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:11px 16px; border-radius:999px; border:none; font-weight:700; cursor:pointer; background:linear-gradient(168deg,#CBA6D9,#E58FC9,#FF5AA6,#F5279A); color:#fff; }
+    .btn-secondary { background:#fff; color:var(--accent); border:1px solid var(--accent); }
+    .btn-danger { background:#fff; color:var(--danger); border:1px solid var(--danger); }
+    .btn-link { background:transparent; color:var(--accent); border:none; padding:0; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .field { display:flex; flex-direction:column; gap:7px; margin-bottom:12px; }
+    label { font-size:13px; color:var(--muted); font-weight:700; }
+    input, select, textarea { border:1px solid var(--border); border-radius:12px; padding:11px 12px; font:inherit; color:var(--text); background:#fff; }
+    textarea { min-height:100px; resize:vertical; }
+    .status { display:none; margin-bottom:12px; padding:10px 12px; border-radius:12px; border:1px solid transparent; font-size:14px; font-weight:700; }
+    .status.info { display:block; background:rgba(203,166,217,.16); color:#4c2b4a; border-color:rgba(203,166,217,.4); }
+    .status.success { display:block; background:rgba(31,122,57,.12); color:var(--ok); border-color:rgba(31,122,57,.3); }
+    .status.error { display:block; background:rgba(150,37,63,.1); color:var(--danger); border-color:rgba(150,37,63,.25); }
+    .section-title { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+    .section-title h2 { font-size:20px; }
+    .controls { display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:8px; margin-bottom:12px; }
+    .table-head, .row { display:grid; grid-template-columns:86px 1.6fr 1fr 0.8fr 0.8fr 0.8fr 1fr 1.5fr; gap:8px; align-items:center; }
+    .table-head { font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:8px 0; border-bottom:1px solid var(--border); }
+    .row { padding:11px 0; border-bottom:1px solid var(--border); }
+    .thumb { width:70px; height:70px; border-radius:12px; object-fit:cover; background:#f5ecf9; }
+    .small { font-size:12px; color:var(--muted); }
+    .badge { display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+    .badge.cover { background:rgba(245,39,154,.12); color:var(--accent); }
+    .badge.draft { background:rgba(124,91,123,.13); color:#5f4a5e; }
+    .badge.published { background:rgba(31,122,57,.12); color:var(--ok); }
+    .actions { display:flex; flex-wrap:wrap; gap:6px; }
+    .img-list { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+    .img-row { display:grid; grid-template-columns:68px 1fr auto; gap:10px; align-items:center; border:1px solid var(--border); border-radius:12px; padding:8px; }
+    .img-row img { width:52px; height:52px; border-radius:10px; object-fit:cover; }
+    .img-controls { display:flex; gap:6px; flex-wrap:wrap; }
+    .muted { color:var(--muted); font-size:13px; }
+    @media(max-width:1080px){
+      .controls { grid-template-columns:1fr 1fr; }
+      .table-head { display:none; }
+      .row { grid-template-columns:1fr; border:1px solid var(--border); border-radius:14px; padding:10px; margin-bottom:10px; }
+      .grid { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
   <div class="page">
     <div class="topbar">
       <div>
-        <h1>Admin Dashboard</h1>
-        <p style="color:var(--muted);margin-top:6px;">Upload nail photos, manage gallery items, and publish instantly.</p>
+        <h1>Nail CMS</h1>
+        <p class="muted">Manage products, images, cover cards, and publish status from one place.</p>
       </div>
-      <button id="logoutBtn" class="btn btn-secondary" style="display:none;">Logout</button>
+      <div class="top-actions">
+        <button id="newProductBtn" class="btn" style="display:none;">Add New Nail Set</button>
+        <button id="logoutBtn" class="btn btn-secondary" style="display:none;">Logout</button>
+      </div>
     </div>
 
     <div class="card" id="loginCard">
-      <h2 style="margin-bottom:16px;">Secure Admin Login</h2>
-      <div class="field">
+      <h2 style="margin-bottom:12px;">Secure Admin Login</h2>
+      <div class="field" style="max-width:380px;">
         <label for="adminPassword">Password</label>
-        <input type="password" id="adminPassword" placeholder="Enter admin password">
+        <input id="adminPassword" type="password" placeholder="Enter admin password">
       </div>
       <button id="loginBtn" class="btn">Login</button>
     </div>
 
-    <div class="card" id="manageCard" style="display:none;">
-      <h2 style="margin-bottom:18px;">Add New Gallery Item</h2>
-      <div id="statusMessage" class="status-message info" role="status" aria-live="polite"></div>
-      <form id="uploadForm" novalidate>
-        <div class="form-grid">
-          <div class="field"><label for="itemTitle">Title</label><input id="itemTitle" type="text" placeholder="Classic French Chrome"></div>
-          <div class="field"><label for="itemCategory">Category</label><select id="itemCategory"><option value="Chrome">Chrome</option><option value="French Tips">French Tips</option><option value="Cateye">Cateye</option><option value="3D Art">3D Art</option><option value="Gallery">Gallery</option></select></div>
-          <div class="field"><label for="itemPrice">Price</label><input id="itemPrice" type="text" placeholder="QAR 130"></div>
-          <div class="field"><label for="itemDescription">Description</label><textarea id="itemDescription" placeholder="Enter item description..."></textarea></div>
+    <div id="app" style="display:none;">
+      <div class="card">
+        <div id="statusMessage" class="status info" role="status" aria-live="polite"></div>
+        <div class="section-title">
+          <h2 id="formTitle">Add New Nail Set</h2>
+          <button id="cancelEditBtn" class="btn btn-secondary" style="display:none;">Cancel Edit</button>
         </div>
-        <div class="field"><label for="itemPhotos">Upload Photos</label><input id="itemPhotos" type="file" accept="image/*" multiple></div>
-        <button id="uploadBtn" class="btn" type="submit">Upload & Publish</button>
-      </form>
-    </div>
 
-    <div class="card" id="libraryCard" style="display:none;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;"><h2>Existing Gallery Items</h2><button id="refreshBtn" class="btn btn-secondary">Refresh</button></div>
-      <div id="galleryList"></div>
+        <form id="productForm" novalidate>
+          <input id="productId" type="hidden">
+          <div class="grid">
+            <div class="field"><label for="productTitle">Title</label><input id="productTitle" type="text" required></div>
+            <div class="field"><label for="productCategory">Category</label>
+              <select id="productCategory">
+                <option>Chrome</option>
+                <option>French Tips</option>
+                <option>Cateye</option>
+                <option>3D Art</option>
+              </select>
+            </div>
+            <div class="field"><label for="productPrice">Price</label><input id="productPrice" type="text" placeholder="QAR 130"></div>
+            <div class="field"><label for="productStatus">Status</label>
+              <select id="productStatus"><option value="published">Published</option><option value="draft">Draft</option></select>
+            </div>
+          </div>
+          <div class="field"><label for="productShortDescription">Short Description</label><textarea id="productShortDescription"></textarea></div>
+          <div class="field"><label for="productFullDescription">Full Description (optional)</label><textarea id="productFullDescription"></textarea></div>
+          <div class="field"><label><input id="isCategoryCover" type="checkbox"> Set as homepage category cover</label></div>
+
+          <div class="grid">
+            <div class="field"><label for="mainImageFile">Main Image (optional for edit)</label><input id="mainImageFile" type="file" accept="image/*"></div>
+            <div class="field"><label for="additionalImageFiles">Additional Images</label><input id="additionalImageFiles" type="file" accept="image/*" multiple></div>
+          </div>
+
+          <div>
+            <label>Images (reorder, remove, choose main)</label>
+            <div id="imagesList" class="img-list"></div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+            <button class="btn" type="submit">Save Product</button>
+            <button class="btn btn-secondary" id="saveDraftBtn" type="button">Save as Draft</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h2>Product Library</h2>
+          <button id="refreshBtn" class="btn btn-secondary">Refresh</button>
+        </div>
+
+        <div class="controls">
+          <input id="searchInput" placeholder="Search title or description">
+          <select id="filterCategory">
+            <option value="all">All Categories</option>
+            <option>Chrome</option>
+            <option>French Tips</option>
+            <option>Cateye</option>
+            <option>3D Art</option>
+          </select>
+          <select id="filterStatus">
+            <option value="all">All Statuses</option>
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+          </select>
+          <select id="sortBy">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="alpha">A to Z</option>
+          </select>
+          <button id="applyFiltersBtn" class="btn btn-secondary">Apply</button>
+        </div>
+
+        <div class="table-head">
+          <div>Image</div><div>Title</div><div>Category</div><div>Price</div><div>Status</div><div>Cover</div><div>Created</div><div>Actions</div>
+        </div>
+        <div id="productsList"></div>
+      </div>
     </div>
   </div>
 
-  <div class="toast" id="toast"></div>
-
   <script>
-    const loginCard = document.getElementById('loginCard');
-    const manageCard = document.getElementById('manageCard');
-    const libraryCard = document.getElementById('libraryCard');
-    const toast = document.getElementById('toast');
-    const statusMessage = document.getElementById('statusMessage');
-    let token = localStorage.getItem('adminToken');
+    const state = {
+      token: localStorage.getItem('adminToken') || '',
+      products: [],
+      editingId: '',
+      images: [],
+      removeImagePublicIds: [],
+      selectedMainPublicId: '',
+    };
 
-    function showToast(message) {
-      toast.textContent = message;
-      toast.classList.add('show');
-      clearTimeout(showToast.timeout);
-      showToast.timeout = setTimeout(() => toast.classList.remove('show'), 2200);
-    }
+    const loginCard = document.getElementById('loginCard');
+    const app = document.getElementById('app');
+    const statusMessage = document.getElementById('statusMessage');
 
     function setStatus(message, type = 'info') {
-      if (!statusMessage) return;
       statusMessage.textContent = message || '';
-      statusMessage.className = `status-message ${type}`;
+      statusMessage.className = `status ${type}`;
     }
 
     async function requestJson(url, options = {}) {
       const res = await fetch(url, options);
-      const text = await res.text();
+      const raw = await res.text();
       let data = {};
-      if (text) {
-        try {
-          data = JSON.parse(text);
-        } catch (error) {
-          data = { error: text };
-        }
+      if (raw) {
+        try { data = JSON.parse(raw); } catch { data = { error: raw }; }
       }
       return { res, data };
+    }
+
+    function authHeaders(extra = {}) {
+      return {
+        Authorization: `Bearer ${state.token}`,
+        ...extra,
+      };
+    }
+
+    function showApp() {
+      loginCard.style.display = 'none';
+      app.style.display = 'block';
+      document.getElementById('newProductBtn').style.display = 'inline-flex';
+      document.getElementById('logoutBtn').style.display = 'inline-flex';
+    }
+
+    function showLogin() {
+      loginCard.style.display = 'block';
+      app.style.display = 'none';
+      document.getElementById('newProductBtn').style.display = 'none';
+      document.getElementById('logoutBtn').style.display = 'none';
     }
 
     async function login() {
@@ -124,135 +216,362 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       });
+
       if (!res.ok) {
-        const message = data.error || 'Login failed';
-        showToast(message);
-        setStatus(message, 'error');
+        setStatus(data.error || 'Login failed', 'error');
         return;
       }
-      token = data.token;
-      localStorage.setItem('adminToken', token);
-      setStatus('Logged in successfully. You can upload gallery items now.', 'success');
-      showAdminUI();
-      fetchGalleryItems();
+
+      state.token = data.token;
+      localStorage.setItem('adminToken', data.token);
+      showApp();
+      setStatus('Logged in successfully.', 'success');
+      await loadProducts();
+      resetForm();
     }
 
     function logout() {
       localStorage.removeItem('adminToken');
-      token = null;
-      loginCard.style.display = 'block';
-      manageCard.style.display = 'none';
-      libraryCard.style.display = 'none';
-      document.getElementById('logoutBtn').style.display = 'none';
+      state.token = '';
+      showLogin();
     }
 
-    async function fetchGalleryItems() {
-      if (!token) return;
-      const { res, data } = await requestJson('/api/admin/list', { headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) {
-        const message = data.error || 'Unable to load items';
-        showToast(message);
-        setStatus(message, 'error');
-        if (res.status === 401) logout();
+    function productBadgeStatus(status) {
+      return status === 'draft' ? '<span class="badge draft">Draft</span>' : '<span class="badge published">Published</span>';
+    }
+
+    function renderProducts() {
+      const el = document.getElementById('productsList');
+      if (!state.products.length) {
+        el.innerHTML = '<p class="muted" style="padding:12px 0;">No products found.</p>';
         return;
       }
-      renderGalleryItems(data.images || []);
-    }
 
-    function renderGalleryItems(items) {
-      const list = document.getElementById('galleryList');
-      list.innerHTML = items.length ? items.map(item => `
-        <div class="panel-row">
-          <img src="${item.url}" alt="${item.title}">
-          <div class="panel-content">
-            <div class="panel-title">${item.title || 'Untitled'}</div>
-            <div class="panel-meta">Category: ${item.category || 'N/A'} · Price: ${item.price || 'N/A'}</div>
-            <div style="color:var(--muted);font-size:13px;">${item.description || 'No description'}</div>
+      el.innerHTML = state.products.map((product) => {
+        const thumb = product.mainImageUrl || product.images?.[0]?.url || 'brand_assets/nail logo.jpg';
+        const created = product.createdAt ? new Date(product.createdAt).toLocaleDateString() : '-';
+        return `
+          <div class="row">
+            <div><img class="thumb" src="${thumb}" alt="${product.title}"></div>
+            <div>
+              <div style="font-weight:700;">${product.title || 'Untitled'}</div>
+              <div class="small">${product.shortDescription || ''}</div>
+            </div>
+            <div>${product.category || '-'}</div>
+            <div>${product.price || '-'}</div>
+            <div>${productBadgeStatus(product.status)}</div>
+            <div>${product.isCategoryCover ? '<span class="badge cover">Cover</span>' : '-'}</div>
+            <div class="small">${created}</div>
+            <div class="actions">
+              <button class="btn btn-secondary" onclick="startEdit('${product.id}')">Edit</button>
+              <button class="btn btn-secondary" onclick="duplicateProduct('${product.id}')">Duplicate</button>
+              <button class="btn btn-secondary" onclick="toggleStatus('${product.id}', '${product.status === 'published' ? 'draft' : 'published'}')">${product.status === 'published' ? 'Unpublish' : 'Publish'}</button>
+              <button class="btn btn-secondary" onclick="setCover('${product.id}')">Set Cover</button>
+              <button class="btn btn-danger" onclick="deleteProduct('${product.id}')">Delete</button>
+            </div>
           </div>
-          <button class="btn btn-secondary" onclick="deleteItem('${item.public_id}')">Delete</button>
-        </div>
-      `).join('') : '<p style="color:var(--muted);">No gallery items found.</p>';
+        `;
+      }).join('');
     }
 
-    async function deleteItem(publicId) {
-      if (!confirm('Delete this item permanently?')) return;
-      const { res, data } = await requestJson('/api/admin/delete', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ public_id: publicId }),
+    async function loadProducts() {
+      const search = document.getElementById('searchInput').value.trim();
+      const category = document.getElementById('filterCategory').value;
+      const status = document.getElementById('filterStatus').value;
+      const sort = document.getElementById('sortBy').value;
+
+      const query = new URLSearchParams({ search, category, status, sort });
+      const { res, data } = await requestJson(`/api/admin/products?${query.toString()}`, {
+        headers: authHeaders(),
       });
+
       if (!res.ok) {
-        const message = data.error || 'Delete failed';
-        showToast(message);
-        setStatus(message, 'error');
+        if (res.status === 401) logout();
+        setStatus(data.error || 'Failed to load products', 'error');
         return;
       }
-      showToast('Item deleted');
-      setStatus('Item deleted successfully.', 'success');
-      fetchGalleryItems();
+
+      state.products = data.products || [];
+      renderProducts();
     }
 
-    async function uploadImages() {
-      const title = document.getElementById('itemTitle').value;
-      const category = document.getElementById('itemCategory').value;
-      const price = document.getElementById('itemPrice').value;
-      const description = document.getElementById('itemDescription').value;
-      const photos = document.getElementById('itemPhotos').files;
-      if (!photos.length) {
-        const message = 'Please upload at least one photo';
-        showToast(message);
-        setStatus(message, 'error');
+    function resetForm() {
+      state.editingId = '';
+      state.images = [];
+      state.removeImagePublicIds = [];
+      state.selectedMainPublicId = '';
+
+      document.getElementById('productId').value = '';
+      document.getElementById('productTitle').value = '';
+      document.getElementById('productCategory').value = 'Chrome';
+      document.getElementById('productPrice').value = '';
+      document.getElementById('productStatus').value = 'published';
+      document.getElementById('productShortDescription').value = '';
+      document.getElementById('productFullDescription').value = '';
+      document.getElementById('isCategoryCover').checked = false;
+      document.getElementById('mainImageFile').value = '';
+      document.getElementById('additionalImageFiles').value = '';
+      document.getElementById('formTitle').textContent = 'Add New Nail Set';
+      document.getElementById('cancelEditBtn').style.display = 'none';
+      renderImages();
+    }
+
+    function startEdit(id) {
+      const product = state.products.find((p) => p.id === id);
+      if (!product) return;
+
+      state.editingId = product.id;
+      state.images = (product.images || []).map((img, index) => ({ ...img, order: index }));
+      state.selectedMainPublicId = product.mainImagePublicId || product.images?.[0]?.publicId || '';
+      state.removeImagePublicIds = [];
+
+      document.getElementById('productId').value = product.id;
+      document.getElementById('productTitle').value = product.title || '';
+      document.getElementById('productCategory').value = product.category || 'Chrome';
+      document.getElementById('productPrice').value = product.price || '';
+      document.getElementById('productStatus').value = product.status || 'published';
+      document.getElementById('productShortDescription').value = product.shortDescription || '';
+      document.getElementById('productFullDescription').value = product.fullDescription || '';
+      document.getElementById('isCategoryCover').checked = Boolean(product.isCategoryCover);
+      document.getElementById('mainImageFile').value = '';
+      document.getElementById('additionalImageFiles').value = '';
+      document.getElementById('formTitle').textContent = `Edit: ${product.title}`;
+      document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+      renderImages();
+      setStatus(`Editing ${product.title}`, 'info');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderImages() {
+      const list = document.getElementById('imagesList');
+      if (!state.images.length) {
+        list.innerHTML = '<p class="muted">No images yet. Upload a main image to create this product.</p>';
         return;
       }
 
-      setStatus('Uploading your gallery item…', 'info');
+      list.innerHTML = state.images.map((img, index) => `
+        <div class="img-row">
+          <img src="${img.url}" alt="Product image ${index + 1}">
+          <div>
+            <div style="font-weight:700;word-break:break-all;">${img.publicId}</div>
+            <label class="small"><input type="radio" name="mainImageRadio" value="${img.publicId}" ${state.selectedMainPublicId === img.publicId ? 'checked' : ''}> Main image</label>
+          </div>
+          <div class="img-controls">
+            <button class="btn btn-secondary" type="button" onclick="moveImage(${index}, -1)">Up</button>
+            <button class="btn btn-secondary" type="button" onclick="moveImage(${index}, 1)">Down</button>
+            <button class="btn btn-danger" type="button" onclick="removeImageAt(${index})">Delete</button>
+          </div>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('input[name="mainImageRadio"]').forEach((el) => {
+        el.addEventListener('change', () => {
+          state.selectedMainPublicId = el.value;
+        });
+      });
+    }
+
+    function moveImage(index, delta) {
+      const target = index + delta;
+      if (target < 0 || target >= state.images.length) return;
+      const clone = [...state.images];
+      const temp = clone[index];
+      clone[index] = clone[target];
+      clone[target] = temp;
+      state.images = clone.map((img, i) => ({ ...img, order: i }));
+      renderImages();
+    }
+
+    function removeImageAt(index) {
+      const removed = state.images[index];
+      if (!removed) return;
+      state.images.splice(index, 1);
+      if (removed.publicId) state.removeImagePublicIds.push(removed.publicId);
+      if (state.selectedMainPublicId === removed.publicId) {
+        state.selectedMainPublicId = state.images[0]?.publicId || '';
+      }
+      state.images = state.images.map((img, i) => ({ ...img, order: i }));
+      renderImages();
+    }
+
+    async function uploadFiles(fileList) {
+      if (!fileList || !fileList.length) return [];
       const formData = new FormData();
-      for (const photo of photos) formData.append('photos', photo);
-      formData.append('title', title);
-      formData.append('category', category);
-      formData.append('price', price);
-      formData.append('description', description);
+      for (const file of fileList) formData.append('photos', file);
 
       const { res, data } = await requestJson('/api/admin/upload', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(),
         body: formData,
       });
+
       if (!res.ok) {
-        const message = data.error || 'Upload failed';
-        console.error('Upload failed', { status: res.status, response: data });
-        showToast(message);
-        setStatus(`Upload failed: ${message}`, 'error');
+        throw new Error(data.error || 'Image upload failed');
+      }
+
+      return (data.uploaded || []).map((item, index) => ({
+        id: item.id || '',
+        publicId: item.publicId || item.public_id,
+        url: item.url,
+        order: index,
+      }));
+    }
+
+    async function saveProduct(forceStatus) {
+      try {
+        setStatus('Saving product...', 'info');
+        const id = document.getElementById('productId').value.trim();
+        const title = document.getElementById('productTitle').value.trim();
+        const category = document.getElementById('productCategory').value;
+        const price = document.getElementById('productPrice').value.trim();
+        const shortDescription = document.getElementById('productShortDescription').value.trim();
+        const fullDescription = document.getElementById('productFullDescription').value.trim();
+        const status = forceStatus || document.getElementById('productStatus').value;
+        const isCategoryCover = document.getElementById('isCategoryCover').checked;
+
+        if (!title) {
+          setStatus('Title is required', 'error');
+          return;
+        }
+
+        const mainImageFiles = document.getElementById('mainImageFile').files;
+        const additionalImageFiles = document.getElementById('additionalImageFiles').files;
+
+        let images = [...state.images];
+
+        if (mainImageFiles.length) {
+          const uploadedMain = await uploadFiles(mainImageFiles);
+          if (!uploadedMain.length) throw new Error('Main image upload returned no file');
+          images.unshift(uploadedMain[0]);
+          state.selectedMainPublicId = uploadedMain[0].publicId;
+        }
+
+        if (additionalImageFiles.length) {
+          const uploadedAdditional = await uploadFiles(additionalImageFiles);
+          images = images.concat(uploadedAdditional);
+        }
+
+        images = images.map((img, index) => ({ ...img, order: index }));
+        const mainImagePublicId = state.selectedMainPublicId || images[0]?.publicId || '';
+
+        if (!images.length || !mainImagePublicId) {
+          setStatus('At least one image is required', 'error');
+          return;
+        }
+
+        const payload = {
+          id,
+          title,
+          category,
+          price,
+          shortDescription,
+          fullDescription,
+          status,
+          isCategoryCover,
+          images,
+          mainImagePublicId,
+          removeImagePublicIds: Array.from(new Set(state.removeImagePublicIds)),
+        };
+
+        const isEdit = Boolean(state.editingId);
+        const { res, data } = await requestJson('/api/admin/products', {
+          method: isEdit ? 'PUT' : 'POST',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          setStatus(data.error || 'Save failed', 'error');
+          return;
+        }
+
+        setStatus(isEdit ? 'Product updated.' : 'Product created.', 'success');
+        resetForm();
+        await loadProducts();
+      } catch (error) {
+        console.error('[admin] save failed', error);
+        setStatus(error.message || 'Save failed', 'error');
+      }
+    }
+
+    async function duplicateProduct(id) {
+      const { res, data } = await requestJson('/api/admin/products', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ action: 'duplicate', id }),
+      });
+      if (!res.ok) {
+        setStatus(data.error || 'Duplicate failed', 'error');
         return;
       }
-      const message = 'Upload complete. Your gallery item is now live.';
-      showToast(message);
-      setStatus(message, 'success');
-      document.getElementById('itemTitle').value = '';
-      document.getElementById('itemPrice').value = '';
-      document.getElementById('itemDescription').value = '';
-      document.getElementById('itemPhotos').value = '';
-      fetchGalleryItems();
+      setStatus('Product duplicated as draft.', 'success');
+      await loadProducts();
     }
 
-    function showAdminUI() {
-      loginCard.style.display = 'none';
-      manageCard.style.display = 'block';
-      libraryCard.style.display = 'block';
-      document.getElementById('logoutBtn').style.display = 'inline-flex';
+    async function toggleStatus(id, status) {
+      const { res, data } = await requestJson('/api/admin/products', {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ id, status }),
+      });
+      if (!res.ok) {
+        setStatus(data.error || 'Status update failed', 'error');
+        return;
+      }
+      setStatus('Status updated.', 'success');
+      await loadProducts();
     }
 
-    document.getElementById('loginBtn').onclick = login;
-    document.getElementById('logoutBtn').onclick = logout;
-    document.getElementById('refreshBtn').onclick = fetchGalleryItems;
-    document.getElementById('uploadForm').addEventListener('submit', (event) => {
+    async function setCover(id) {
+      const { res, data } = await requestJson('/api/admin/products', {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ id, isCategoryCover: true }),
+      });
+      if (!res.ok) {
+        setStatus(data.error || 'Cover update failed', 'error');
+        return;
+      }
+      setStatus('Category cover updated.', 'success');
+      await loadProducts();
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm('Delete this product and all its images permanently?')) return;
+      const { res, data } = await requestJson('/api/admin/products', {
+        method: 'DELETE',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) {
+        setStatus(data.error || 'Delete failed', 'error');
+        return;
+      }
+      setStatus('Product deleted.', 'success');
+      if (state.editingId === id) resetForm();
+      await loadProducts();
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('newProductBtn').addEventListener('click', resetForm);
+    document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+    document.getElementById('refreshBtn').addEventListener('click', loadProducts);
+    document.getElementById('applyFiltersBtn').addEventListener('click', loadProducts);
+    document.getElementById('saveDraftBtn').addEventListener('click', () => saveProduct('draft'));
+
+    document.getElementById('productForm').addEventListener('submit', (event) => {
       event.preventDefault();
-      uploadImages();
+      saveProduct();
     });
 
-    if (token) {
-      showAdminUI();
-      fetchGalleryItems();
+    if (state.token) {
+      showApp();
+      setStatus('Loading products...', 'info');
+      loadProducts();
+      resetForm();
+    } else {
+      showLogin();
     }
   </script>
 </body>

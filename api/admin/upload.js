@@ -55,13 +55,7 @@ function cleanText(value) {
     .trim();
 }
 
-module.exports.config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-module.exports = async function handler(req, res) {
+const handler = async function handler(req, res) {
   console.log('[upload] request start', {
     method: req?.method,
     url: req?.url,
@@ -192,4 +186,11 @@ module.exports = async function handler(req, res) {
       error: error?.message || 'Upload failed',
     });
   }
+};
+
+module.exports = handler;
+module.exports.config = {
+  api: {
+    bodyParser: false,
+  },
 };
