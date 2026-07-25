@@ -75,7 +75,8 @@
         <input id="adminPassword" type="password" placeholder="Enter admin password">
       </div>
       <button id="loginBtn" class="btn">Login</button>
-    </div>
+        <div id="loginStatusMessage" class="status info" role="status" aria-live="polite"></div>
+      </div>
 
     <div id="app" style="display:none;">
       <div class="card">
@@ -182,11 +183,17 @@
     const loginCard = document.getElementById('loginCard');
     const app = document.getElementById('app');
     const statusMessage = document.getElementById('statusMessage');
+      const loginStatusMessage = document.getElementById('loginStatusMessage');
 
     function setStatus(message, type = 'info') {
       statusMessage.textContent = message || '';
       statusMessage.className = `status ${type}`;
     }
+
+      function setLoginStatus(message, type = 'info') {
+        loginStatusMessage.textContent = message || '';
+        loginStatusMessage.className = `status ${type}`;
+      }
 
     function escapeHtml(value) {
       return String(value || '')
@@ -240,6 +247,7 @@
       app.style.display = 'block';
       document.getElementById('newProductBtn').style.display = 'inline-flex';
       document.getElementById('logoutBtn').style.display = 'inline-flex';
+        setLoginStatus('');
     }
 
     function showLogin() {
@@ -258,7 +266,7 @@
       });
 
       if (!res.ok) {
-        setStatus(data.error || 'Login failed', 'error');
+          setLoginStatus(data.error || 'Login failed', 'error');
         return;
       }
 
@@ -275,6 +283,7 @@
       localStorage.removeItem('adminToken');
       state.token = '';
       showLogin();
+        setLoginStatus('');
     }
 
     function productBadgeStatus(status) {
