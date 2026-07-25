@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cateye Nails — Nail it by K</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pridi:wght@300;400;600&family=Mulish:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles-category.css" />
+</head>
+<body>
+  <header class="page-header">
+    <div class="container">
+      <div class="topbar">
+        <a href="index.html" class="back-link">← Back to home</a>
+        <div class="basket-pill">Basket <span id="basketCount">0</span></div>
+      </div>
+      <div class="page-heading">
+        <div class="s-tag" style="justify-content:center; margin-bottom:12px;">Cateye Collection</div>
+        <h1>Cateye Nails</h1>
+        <p>Elegant almond-shaped curves with a sculpted, reflective effect that gives a bold and polished finish.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="products-grid" id="productsGrid"></div>
+  </main>
+
+  <div class="modal" id="productModal" aria-hidden="true">
+    <div class="modal-backdrop" onclick="closeModal()"></div>
+    <div class="modal-card">
+      <img class="modal-image" id="modalImage" src="" alt="Nail design preview">
+      <div class="modal-body">
+        <h3 id="modalTitle"></h3>
+        <p id="modalDescription"></p>
+        <div class="modal-price">Price: <span id="modalPriceValue"></span></div>
+        <div class="modal-actions">
+          <button class="btn-primary" onclick="addToBasket()">Add to basket</button>
+          <button class="btn-secondary" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="styles-category.js"></script>
+  <script>
+    window.categoryProducts = [
+      {
+        title: 'Soft Cateye Pink',
+        tag: 'Sweet & Sleek',
+        price: 'QAR 130',
+        description: 'A polished cateye set with a subtle pink glow and a smooth sculpted finish.',
+        image: 'nails/nail pic1.jpg'
+      },
+      {
+        title: 'Deep Plum Cateye',
+        tag: 'Rich & Bold',
+        price: 'QAR 145',
+        description: 'A rich plum cateye design that feels dramatic, elegant, and very chic.',
+        image: 'nails/nail pic2.jpg'
+      },
+      {
+        title: 'Silver Cateye Glow',
+        tag: 'High Shine',
+        price: 'QAR 150',
+        description: 'A silver cateye effect with sleek curves and glowing shine for a statement finish.',
+        image: 'nails/nail pic3.jpg'
+      },
+      {
+        title: 'Champagne Cateye',
+        tag: 'Luxe Finish',
+        price: 'QAR 160',
+        description: 'Soft champagne tones with a refined reflective curve for an elevated look.',
+        image: 'nails/nail pic4.jpg'
+      }
+    ];
+  </script>
+</body>
+</html>

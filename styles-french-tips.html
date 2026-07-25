@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>French Tips — Nail it by K</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pridi:wght@300;400;600&family=Mulish:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles-category.css" />
+</head>
+<body>
+  <header class="page-header">
+    <div class="container">
+      <div class="topbar">
+        <a href="index.html" class="back-link">← Back to home</a>
+        <div class="basket-pill">Basket <span id="basketCount">0</span></div>
+      </div>
+      <div class="page-heading">
+        <div class="s-tag" style="justify-content:center; margin-bottom:12px;">French Tips Collection</div>
+        <h1>French Tips</h1>
+        <p>Soft, polished, and timeless sets with clean lines, delicate color, and elegant finish options.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="products-grid" id="productsGrid"></div>
+  </main>
+
+  <div class="modal" id="productModal" aria-hidden="true">
+    <div class="modal-backdrop" onclick="closeModal()"></div>
+    <div class="modal-card">
+      <img class="modal-image" id="modalImage" src="" alt="Nail design preview">
+      <div class="modal-body">
+        <h3 id="modalTitle"></h3>
+        <p id="modalDescription"></p>
+        <div class="modal-price">Price: <span id="modalPriceValue"></span></div>
+        <div class="modal-actions">
+          <button class="btn-primary" onclick="addToBasket()">Add to basket</button>
+          <button class="btn-secondary" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="styles-category.js"></script>
+  <script>
+    window.categoryProducts = [
+      {
+        title: 'Classic White French',
+        tag: 'Timeless Style',
+        price: 'QAR 110',
+        description: 'A clean white tip set that feels refined, polished, and perfect for everyday wear.',
+        image: 'nails/nail pic2.jpg'
+      },
+      {
+        title: 'Baby Pink French',
+        tag: 'Soft Elegance',
+        price: 'QAR 115',
+        description: 'A soft pink base with a delicate tip for a feminine and understated finish.',
+        image: 'nails/nail pic3.jpg'
+      },
+      {
+        title: 'Glazed French',
+        tag: 'Modern Twist',
+        price: 'QAR 125',
+        description: 'A glossy French tip set with a subtle sheen and luxurious finish.',
+        image: 'nails/nail pic4.jpg'
+      },
+      {
+        title: 'French Tip with Gems',
+        tag: 'Soft Glam',
+        price: 'QAR 140',
+        description: 'A chic French tip set enhanced with soft sparkle and elegant detail.',
+        image: 'nails/nail pic5.jpg'
+      }
+    ];
+  </script>
+</body>
+</html>

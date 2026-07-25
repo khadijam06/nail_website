@@ -146,14 +146,12 @@
 
     /* ══ STYLES ══ */
     .styles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .style-card { border-radius: 20px; overflow: hidden; position: relative; aspect-ratio: 3/4; cursor: pointer; }
+    .style-card { border-radius: 20px; overflow: hidden; position: relative; aspect-ratio: 3/4; cursor: pointer; text-decoration: none; display: block; }
     .style-bg { position: absolute; inset: 0; }
     .style-card:nth-child(1) .style-bg { background: linear-gradient(135deg,#E8E0F0,#D4C8E8); }
     .style-card:nth-child(2) .style-bg { background: linear-gradient(135deg,#FFE0F0,#FFAAD4); }
     .style-card:nth-child(3) .style-bg { background: linear-gradient(135deg,#FFF0D8,#F5D9A8); }
     .style-card:nth-child(4) .style-bg { background: linear-gradient(135deg,#D8F0E8,#A8D9C4); }
-    .style-card:nth-child(5) .style-bg { background: linear-gradient(135deg,#E0E8FF,#B8C4F0); }
-    .style-card:nth-child(6) .style-bg { background: linear-gradient(135deg,#FFE8E8,#F0B8B8); }
     .style-emo { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-62%); font-size: 48px; }
     .style-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 14px; background: linear-gradient(transparent,rgba(0,0,0,.13)); }
     .style-info h3 { font-family: var(--ff-display); font-weight: 600; font-size: 14px; color: var(--wine); margin-bottom: 2px; }
@@ -453,12 +451,10 @@
       <p class="s-sub">From everyday classics to statement sets — if you can dream it, we can nail it.</p>
     </div>
     <div class="styles-grid">
-      <div class="style-card fade d1"><div class="style-bg"></div><div class="style-emo">🪞</div><div class="style-info"><h3>Chrome &amp; Mirror</h3><p>Reflective, ultra-glossy finish</p></div></div>
-      <div class="style-card fade d2"><div class="style-bg"></div><div class="style-emo">🌸</div><div class="style-info"><h3>French Tips</h3><p>Classic clean lines, your way</p></div></div>
-      <div class="style-card fade d3"><div class="style-bg"></div><div class="style-emo">✨</div><div class="style-info"><h3>3D Charms</h3><p>Gems, pearls &amp; intricate details</p></div></div>
-      <div class="style-card fade d1"><div class="style-bg"></div><div class="style-emo">🍬</div><div class="style-info"><h3>Jelly Nails</h3><p>Translucent, dreamy sheer tones</p></div></div>
-      <div class="style-card fade d2"><div class="style-bg"></div><div class="style-emo">💅</div><div class="style-info"><h3>Nail Art</h3><p>Florals, abstracts, patterns</p></div></div>
-      <div class="style-card fade d3"><div class="style-bg"></div><div class="style-emo">💎</div><div class="style-info"><h3>Ombre &amp; Gradient</h3><p>Seamless soft colour transitions</p></div></div>
+      <a href="styles-chrome.html" class="style-card fade d1"><div class="style-bg"></div><div class="style-emo">🪞</div><div class="style-info"><h3>Chrome</h3><p>Reflective, ultra-glossy finish</p></div></a>
+      <a href="styles-french-tips.html" class="style-card fade d2"><div class="style-bg"></div><div class="style-emo">🌸</div><div class="style-info"><h3>French Tips</h3><p>Classic clean lines, your way</p></div></a>
+      <a href="styles-cateye.html" class="style-card fade d3"><div class="style-bg"></div><div class="style-emo">✨</div><div class="style-info"><h3>Cateye</h3><p>Sculpted curves with a luxe finish</p></div></a>
+      <a href="styles-3d-art.html" class="style-card fade d1"><div class="style-bg"></div><div class="style-emo">💎</div><div class="style-info"><h3>3D Art</h3><p>Gems, charms &amp; dimensional detail</p></div></a>
     </div>
   </div>
 </section>

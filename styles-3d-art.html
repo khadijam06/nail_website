@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Art Nails — Nail it by K</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pridi:wght@300;400;600&family=Mulish:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles-category.css" />
+</head>
+<body>
+  <header class="page-header">
+    <div class="container">
+      <div class="topbar">
+        <a href="index.html" class="back-link">← Back to home</a>
+        <div class="basket-pill">Basket <span id="basketCount">0</span></div>
+      </div>
+      <div class="page-heading">
+        <div class="s-tag" style="justify-content:center; margin-bottom:12px;">3D Art Collection</div>
+        <h1>3D Art Nails</h1>
+        <p>Statement sets with sculpted details, charms, gems, and textured design elements made to stand out.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="products-grid" id="productsGrid"></div>
+  </main>
+
+  <div class="modal" id="productModal" aria-hidden="true">
+    <div class="modal-backdrop" onclick="closeModal()"></div>
+    <div class="modal-card">
+      <img class="modal-image" id="modalImage" src="" alt="Nail design preview">
+      <div class="modal-body">
+        <h3 id="modalTitle"></h3>
+        <p id="modalDescription"></p>
+        <div class="modal-price">Price: <span id="modalPriceValue"></span></div>
+        <div class="modal-actions">
+          <button class="btn-primary" onclick="addToBasket()">Add to basket</button>
+          <button class="btn-secondary" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="styles-category.js"></script>
+  <script>
+    window.categoryProducts = [
+      {
+        title: 'Pearl 3D Sculpt',
+        tag: 'Soft Glam',
+        price: 'QAR 160',
+        description: 'A sculpted 3D nail design with pearls and elegant soft texture for a dreamy finish.',
+        image: 'nails/nail pic1.jpg'
+      },
+      {
+        title: 'Floral Charm Set',
+        tag: 'Artful Detail',
+        price: 'QAR 170',
+        description: 'A floral-inspired 3D set with sculpted charm details that bring a romantic touch.',
+        image: 'nails/nail pic2.jpg'
+      },
+      {
+        title: 'Crystal Statement',
+        tag: 'Bold & Luxe',
+        price: 'QAR 180',
+        description: 'A rich statement set with crystal details and elevated dimensional design.',
+        image: 'nails/nail pic3.jpg'
+      },
+      {
+        title: 'Luxury 3D Mix',
+        tag: 'Premium Art',
+        price: 'QAR 195',
+        description: 'An opulent 3D art set combining sculpted shapes, charms, and detailed texture.',
+        image: 'nails/nail pic4.jpg'
+      }
+    ];
+  </script>
+</body>
+</html>
