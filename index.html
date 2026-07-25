@@ -545,29 +545,8 @@
       <h2>Fresh from K's hands.</h2>
       <p class="s-sub">Every set is one-of-a-kind. Drop in your photos to fill this gallery — your clients will love it.</p>
     </div>
-    <div class="gallery-grid">
-      <div class="gal-item fade d1">
-        <img src="brand_assets/gallery/gallery-1.jpg" alt="Nail it by K collection — nine custom press-on sets">
-        <div class="gal-overlay"><span>The Collection</span></div>
-      </div>
-      <div class="gal-item fade d2">
-        <img src="brand_assets/gallery/gallery-2.jpg" alt="Tortoise shell French tips">
-        <div class="gal-overlay"><span>Tortoise French Tips</span></div>
-      </div>
-      <div class="gal-item fade d3">
-        <img src="brand_assets/gallery/gallery-3.jpg" alt="3D monkey charm nails">
-        <div class="gal-overlay"><span>3D Monkey Charms</span></div>
-      </div>
-      <div class="gal-item fade d1">
-        <img src="brand_assets/gallery/gallery-4.jpg" alt="Pink celestial moon and stars set">
-        <div class="gal-overlay"><span>Celestial Set</span></div>
-      </div>
-      <div class="gal-item fade d2">
-        <img src="brand_assets/gallery/gallery-5.jpg" alt="3D red floral vine nails">
-        <div class="gal-overlay"><span>3D Floral Vines</span></div>
-      </div>
-    </div>
-    <div class="gallery-note fade">
+    <div id="galleryGrid" class="gallery-grid"></div>
+    <div id="galleryMessage" class="gallery-note fade" style="display:none;">
       <p>Follow <strong>@nail.it.qa</strong> on Instagram for the full gallery 💕</p>
       <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="btn-primary">View on Instagram ↗</a>
     </div>
@@ -643,6 +622,7 @@
             <li><a href="#gallery">Gallery</a></li>
             <li><a href="#pricing">Orders &amp; Pricing</a></li>
             <li><a href="#faq">FAQ</a></li>
+            <li><a href="/admin">Admin</a></li>
           </ul>
         </div>
         <div>
@@ -747,7 +727,37 @@
   }
 
   document.getElementById('basketToggle').onclick = openBasketModal;
-  document.addEventListener('DOMContentLoaded', updateBasketCount);
+  document.addEventListener('DOMContentLoaded', () => {
+    updateBasketCount();
+    loadGalleryImages();
+  });
+
+  async function loadGalleryImages() {
+    const grid = document.getElementById('galleryGrid');
+    const message = document.getElementById('galleryMessage');
+    if (!grid) return;
+    try {
+      const res = await fetch('/api/gallery');
+      const data = await res.json();
+      if (!res.ok || !data.images) throw new Error(data.error || 'Unable to load gallery');
+      grid.innerHTML = data.images.slice(0, 6).map(img => `
+        <div class="gal-item fade d1">
+          <img src="${img.url}" alt="${img.title || 'Gallery image'}">
+          <div class="gal-overlay"><span>${img.title || 'Nail set'}</span></div>
+        </div>
+      `).join('');
+      if (data.images.length === 0) {
+        grid.innerHTML = '<p style="color:var(--mauve);grid-column:span 2;text-align:center;">No gallery items are published yet.</p>';
+        message.style.display = 'block';
+      } else {
+        message.style.display = 'block';
+      }
+    } catch (error) {
+      grid.innerHTML = '<p style="color:var(--mauve);grid-column:span 2;text-align:center;">Unable to load gallery right now.</p>';
+      message.style.display = 'block';
+      console.error(error);
+    }
+  }
 </script>
 </body>
 </html>

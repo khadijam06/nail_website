@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Nail it by K</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pridi:wght@300;400;600&family=Mulish:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#fcf5ff; --panel:#ffffff; --accent:#f5279a; --text:#3b1b35; --muted:#7d5b7b; --border:rgba(199,157,183,.35); }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Mulish',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+    .page{max-width:1200px;margin:0 auto;padding:24px;}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;}
+    .topbar h1{font-family:'Pridi',serif;font-size:28px;}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:24px;box-shadow:0 20px 50px rgba(245,39,154,.08);margin-bottom:24px;}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .field{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+    label{font-weight:700;color:var(--muted);font-size:14px;}
+    input,select,textarea{border:1px solid var(--border);border-radius:14px;padding:14px 16px;font-size:14px;color:var(--text);background:#fff;}
+    textarea{resize:vertical;min-height:120px;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 22px;border:none;border-radius:999px;font-weight:700;cursor:pointer;background:linear-gradient(168deg,#CBA6D9,#E58FC9,#FF5AA6,#F5279A);color:#fff;}
+    .btn-secondary{background:#fff;color:var(--accent);border:1px solid var(--accent);}
+    .btn-link{background:transparent;color:var(--accent);padding:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+    .panel-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;border-bottom:1px solid var(--border);}
+    .panel-row:last-child{border-bottom:none;}
+    .panel-row img{width:84px;height:84px;object-fit:cover;border-radius:18px;}
+    .panel-content{flex:1;min-width:0;}
+    .panel-title{font-size:16px;font-weight:700;margin-bottom:4px;}
+    .panel-meta{font-size:13px;color:var(--muted);margin-bottom:8px;}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(245,39,154,.08);color:var(--accent);font-weight:700;font-size:12px;}
+    .toast{position:fixed;bottom:24px;right:24px;padding:14px 18px;border-radius:999px;background:var(--accent);color:#fff;box-shadow:0 18px 40px rgba(0,0,0,.16);display:none;}
+    .toast.show{display:block;}
+    @media(max-width:900px){.form-grid,.grid{grid-template-columns:1fr;}.topbar{flex-direction:column;align-items:flex-start;}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div>
+        <h1>Admin Dashboard</h1>
+        <p style="color:var(--muted);margin-top:6px;">Upload nail photos, manage gallery items, and publish instantly.</p>
+      </div>
+      <button id="logoutBtn" class="btn btn-secondary" style="display:none;">Logout</button>
+    </div>
+
+    <div class="card" id="loginCard">
+      <h2 style="margin-bottom:16px;">Secure Admin Login</h2>
+      <div class="field">
+        <label for="adminPassword">Password</label>
+        <input type="password" id="adminPassword" placeholder="Enter admin password">
+      </div>
+      <button id="loginBtn" class="btn">Login</button>
+    </div>
+
+    <div class="card" id="manageCard" style="display:none;">
+      <h2 style="margin-bottom:18px;">Add New Gallery Item</h2>
+      <div class="form-grid">
+        <div class="field"><label for="itemTitle">Title</label><input id="itemTitle" type="text" placeholder="Classic French Chrome"></div>
+        <div class="field"><label for="itemCategory">Category</label><select id="itemCategory"><option value="Chrome">Chrome</option><option value="French Tips">French Tips</option><option value="Cateye">Cateye</option><option value="3D Art">3D Art</option><option value="Gallery">Gallery</option></select></div>
+        <div class="field"><label for="itemPrice">Price</label><input id="itemPrice" type="text" placeholder="QAR 130"></div>
+        <div class="field"><label for="itemDescription">Description</label><textarea id="itemDescription" placeholder="Enter item description..."></textarea></div>
+      </div>
+      <div class="field"><label for="itemPhotos">Upload Photos</label><input id="itemPhotos" type="file" accept="image/*" multiple></div>
+      <button id="uploadBtn" class="btn">Upload & Publish</button>
+    </div>
+
+    <div class="card" id="libraryCard" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;"><h2>Existing Gallery Items</h2><button id="refreshBtn" class="btn btn-secondary">Refresh</button></div>
+      <div id="galleryList"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const loginCard = document.getElementById('loginCard');
+    const manageCard = document.getElementById('manageCard');
+    const libraryCard = document.getElementById('libraryCard');
+    const toast = document.getElementById('toast');
+    let token = localStorage.getItem('adminToken');
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(showToast.timeout);
+      showToast.timeout = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    async function login() {
+      const password = document.getElementById('adminPassword').value;
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Login failed'); return; }
+      token = data.token;
+      localStorage.setItem('adminToken', token);
+      showAdminUI();
+      fetchGalleryItems();
+    }
+
+    function logout() {
+      localStorage.removeItem('adminToken');
+      token = null;
+      loginCard.style.display = 'block';
+      manageCard.style.display = 'none';
+      libraryCard.style.display = 'none';
+      document.getElementById('logoutBtn').style.display = 'none';
+    }
+
+    async function fetchGalleryItems() {
+      if (!token) return;
+      const res = await fetch('/api/admin/list', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Unable to load items'); if (res.status === 401) logout(); return; }
+      renderGalleryItems(data.images);
+    }
+
+    function renderGalleryItems(items) {
+      const list = document.getElementById('galleryList');
+      list.innerHTML = items.length ? items.map(item => `
+        <div class="panel-row">
+          <img src="${item.url}" alt="${item.title}">
+          <div class="panel-content">
+            <div class="panel-title">${item.title || 'Untitled'}</div>
+            <div class="panel-meta">Category: ${item.category || 'N/A'} · Price: ${item.price || 'N/A'}</div>
+            <div style="color:var(--muted);font-size:13px;">${item.description || 'No description'}</div>
+          </div>
+          <button class="btn btn-secondary" onclick="deleteItem('${item.public_id}')">Delete</button>
+        </div>
+      `).join('') : '<p style="color:var(--muted);">No gallery items found.</p>';
+    }
+
+    async function deleteItem(publicId) {
+      if (!confirm('Delete this item permanently?')) return;
+      const res = await fetch('/api/admin/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ public_id: publicId }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Delete failed'); return; }
+      showToast('Item deleted');
+      fetchGalleryItems();
+    }
+
+    async function uploadImages() {
+      const title = document.getElementById('itemTitle').value;
+      const category = document.getElementById('itemCategory').value;
+      const price = document.getElementById('itemPrice').value;
+      const description = document.getElementById('itemDescription').value;
+      const photos = document.getElementById('itemPhotos').files;
+      if (!photos.length) { showToast('Please upload at least one photo'); return; }
+
+      const formData = new FormData();
+      for (const photo of photos) formData.append('photos', photo);
+      formData.append('title', title);
+      formData.append('category', category);
+      formData.append('price', price);
+      formData.append('description', description);
+
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Upload failed'); return; }
+      showToast('Uploaded successfully');
+      document.getElementById('itemPhotos').value = '';
+      fetchGalleryItems();
+    }
+
+    function showAdminUI() {
+      loginCard.style.display = 'none';
+      manageCard.style.display = 'block';
+      libraryCard.style.display = 'block';
+      document.getElementById('logoutBtn').style.display = 'inline-flex';
+    }
+
+    document.getElementById('loginBtn').onclick = login;
+    document.getElementById('logoutBtn').onclick = logout;
+    document.getElementById('refreshBtn').onclick = fetchGalleryItems;
+    document.getElementById('uploadBtn').onclick = uploadImages;
+
+    if (token) {
+      showAdminUI();
+      fetchGalleryItems();
+    }
+  </script>
+</body>
+</html>

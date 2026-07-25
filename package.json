@@ -1,0 +1,9 @@
+{
+  "name": "nail-website-admin",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "cloudinary": "^1.38.1",
+    "formidable": "^3.7.0"
+  }
+}
