@@ -26,6 +26,20 @@ function sanitizeText(value, max = 4000) {
   return String(value || '').replace(/\|/g, ' ').trim().slice(0, max);
 }
 
+function sanitizeContextValue(value) {
+  return String(value || '')
+    .replace(/[|=]/g, ' ')
+    .trim();
+}
+
+function toCloudinaryContext(contextObj) {
+  return Object.entries(contextObj || {})
+    .map(([key, value]) => [sanitizeText(key, 64), sanitizeContextValue(value)])
+    .filter(([key, value]) => key && value)
+    .map(([key, value]) => `${key}=${value}`)
+    .join('|');
+}
+
 function toBool(value) {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'number') return value === 1;
@@ -310,7 +324,7 @@ async function rollbackImageStates(cloudinary, snapshots, publicIds) {
     try {
       await cloudinary.uploader.explicit(publicId, {
         type: 'upload',
-        context: state.context,
+        context: toCloudinaryContext(state.context),
         tags: state.tags,
       });
     } catch (error) {
@@ -335,7 +349,7 @@ async function applyProductContextToImages(cloudinary, product) {
     try {
       await cloudinary.uploader.explicit(image.publicId, {
         type: 'upload',
-        context: contextForImage(product, image, index),
+        context: toCloudinaryContext(contextForImage(product, image, index)),
         tags: [
           'nailit_product',
           `product:${product.id}`,
@@ -504,7 +518,7 @@ async function duplicateProduct(cloudinary, payload) {
       folder: FOLDER,
       resource_type: 'image',
       tags: ['nailit_unassigned'],
-      context: { custom: { asset_state: 'unassigned' } },
+      context: 'asset_state=unassigned',
     });
     uploaded.push({
       publicId: copy.public_id,

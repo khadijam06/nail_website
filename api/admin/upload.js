@@ -55,6 +55,13 @@ function cleanText(value) {
     .trim();
 }
 
+function toCloudinaryContext(contextObj) {
+  return Object.entries(contextObj || {})
+    .map(([key, value]) => `${cleanText(key)}=${cleanText(value).replace(/=/g, ' ')}`)
+    .filter((entry) => entry !== '=')
+    .join('|');
+}
+
 function toUploadErrorPayload(error, fallbackMessage) {
   const nestedMessage = error?.error?.message || error?.cause?.message;
   return {
@@ -163,15 +170,13 @@ const handler = async function handler(req, res) {
           folder: 'nailit_gallery',
           resource_type: 'image',
           tags: ['nailit_unassigned'],
-          context: {
-            custom: {
-              title,
-              category,
-              price,
-              description,
-              asset_state: 'unassigned',
-            },
-          },
+          context: toCloudinaryContext({
+            title,
+            category,
+            price,
+            description,
+            asset_state: 'unassigned',
+          }),
           transformation: [
             {
               quality: 'auto',
