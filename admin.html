@@ -62,14 +62,16 @@
     <div class="card" id="manageCard" style="display:none;">
       <h2 style="margin-bottom:18px;">Add New Gallery Item</h2>
       <div id="statusMessage" class="status-message info" role="status" aria-live="polite"></div>
-      <div class="form-grid">
-        <div class="field"><label for="itemTitle">Title</label><input id="itemTitle" type="text" placeholder="Classic French Chrome"></div>
-        <div class="field"><label for="itemCategory">Category</label><select id="itemCategory"><option value="Chrome">Chrome</option><option value="French Tips">French Tips</option><option value="Cateye">Cateye</option><option value="3D Art">3D Art</option><option value="Gallery">Gallery</option></select></div>
-        <div class="field"><label for="itemPrice">Price</label><input id="itemPrice" type="text" placeholder="QAR 130"></div>
-        <div class="field"><label for="itemDescription">Description</label><textarea id="itemDescription" placeholder="Enter item description..."></textarea></div>
-      </div>
-      <div class="field"><label for="itemPhotos">Upload Photos</label><input id="itemPhotos" type="file" accept="image/*" multiple></div>
-      <button id="uploadBtn" class="btn">Upload & Publish</button>
+      <form id="uploadForm" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="itemTitle">Title</label><input id="itemTitle" type="text" placeholder="Classic French Chrome"></div>
+          <div class="field"><label for="itemCategory">Category</label><select id="itemCategory"><option value="Chrome">Chrome</option><option value="French Tips">French Tips</option><option value="Cateye">Cateye</option><option value="3D Art">3D Art</option><option value="Gallery">Gallery</option></select></div>
+          <div class="field"><label for="itemPrice">Price</label><input id="itemPrice" type="text" placeholder="QAR 130"></div>
+          <div class="field"><label for="itemDescription">Description</label><textarea id="itemDescription" placeholder="Enter item description..."></textarea></div>
+        </div>
+        <div class="field"><label for="itemPhotos">Upload Photos</label><input id="itemPhotos" type="file" accept="image/*" multiple></div>
+        <button id="uploadBtn" class="btn" type="submit">Upload & Publish</button>
+      </form>
     </div>
 
     <div class="card" id="libraryCard" style="display:none;">
@@ -243,7 +245,10 @@
     document.getElementById('loginBtn').onclick = login;
     document.getElementById('logoutBtn').onclick = logout;
     document.getElementById('refreshBtn').onclick = fetchGalleryItems;
-    document.getElementById('uploadBtn').onclick = uploadImages;
+    document.getElementById('uploadForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      uploadImages();
+    });
 
     if (token) {
       showAdminUI();
