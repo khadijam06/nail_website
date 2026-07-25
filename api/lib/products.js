@@ -229,6 +229,12 @@ function mergeResourceToImage(resource) {
 
 function getResourceProductId(resource) {
   const custom = getResourceContext(resource);
+  const tags = Array.isArray(resource?.tags) ? resource.tags : [];
+
+  if (custom.asset_state === 'unassigned' || tags.includes('nailit_unassigned')) {
+    return '';
+  }
+
   const fromContext = sanitizeId(custom.product_id || '');
   if (fromContext && isValidProductId(fromContext)) {
     return fromContext;
