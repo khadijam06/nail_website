@@ -240,11 +240,6 @@ function getResourceProductId(resource) {
     return fromContext;
   }
 
-  const hasLegacyDetails = Boolean(custom.title || custom.category || custom.price || custom.description);
-  if (hasLegacyDetails) {
-    return `legacy-${sanitizeText(resource.public_id, 80).replace(/[^a-zA-Z0-9-]/g, '-')}`.toLowerCase();
-  }
-
   return '';
 }
 
