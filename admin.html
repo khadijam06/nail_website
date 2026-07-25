@@ -33,6 +33,10 @@
     .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(245,39,154,.08);color:var(--accent);font-weight:700;font-size:12px;}
     .toast{position:fixed;bottom:24px;right:24px;padding:14px 18px;border-radius:999px;background:var(--accent);color:#fff;box-shadow:0 18px 40px rgba(0,0,0,.16);display:none;}
     .toast.show{display:block;}
+    .status-message{display:none;padding:12px 14px;border-radius:14px;margin-bottom:16px;font-size:14px;font-weight:700;border:1px solid transparent;}
+    .status-message.info{display:block;background:rgba(203,166,217,.16);color:var(--wine);border-color:rgba(203,166,217,.35);} 
+    .status-message.success{display:block;background:rgba(40,167,69,.12);color:#155724;border-color:rgba(40,167,69,.25);} 
+    .status-message.error{display:block;background:rgba(220,53,69,.10);color:#842029;border-color:rgba(220,53,69,.24);} 
     @media(max-width:900px){.form-grid,.grid{grid-template-columns:1fr;}.topbar{flex-direction:column;align-items:flex-start;}}
   </style>
 </head>
@@ -57,6 +61,7 @@
 
     <div class="card" id="manageCard" style="display:none;">
       <h2 style="margin-bottom:18px;">Add New Gallery Item</h2>
+      <div id="statusMessage" class="status-message info" role="status" aria-live="polite"></div>
       <div class="form-grid">
         <div class="field"><label for="itemTitle">Title</label><input id="itemTitle" type="text" placeholder="Classic French Chrome"></div>
         <div class="field"><label for="itemCategory">Category</label><select id="itemCategory"><option value="Chrome">Chrome</option><option value="French Tips">French Tips</option><option value="Cateye">Cateye</option><option value="3D Art">3D Art</option><option value="Gallery">Gallery</option></select></div>
@@ -80,6 +85,7 @@
     const manageCard = document.getElementById('manageCard');
     const libraryCard = document.getElementById('libraryCard');
     const toast = document.getElementById('toast');
+    const statusMessage = document.getElementById('statusMessage');
     let token = localStorage.getItem('adminToken');
 
     function showToast(message) {
@@ -89,17 +95,42 @@
       showToast.timeout = setTimeout(() => toast.classList.remove('show'), 2200);
     }
 
+    function setStatus(message, type = 'info') {
+      if (!statusMessage) return;
+      statusMessage.textContent = message || '';
+      statusMessage.className = `status-message ${type}`;
+    }
+
+    async function requestJson(url, options = {}) {
+      const res = await fetch(url, options);
+      const text = await res.text();
+      let data = {};
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (error) {
+          data = { error: text };
+        }
+      }
+      return { res, data };
+    }
+
     async function login() {
       const password = document.getElementById('adminPassword').value;
-      const res = await fetch('/api/admin/login', {
+      const { res, data } = await requestJson('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error || 'Login failed'); return; }
+      if (!res.ok) {
+        const message = data.error || 'Login failed';
+        showToast(message);
+        setStatus(message, 'error');
+        return;
+      }
       token = data.token;
       localStorage.setItem('adminToken', token);
+      setStatus('Logged in successfully. You can upload gallery items now.', 'success');
       showAdminUI();
       fetchGalleryItems();
     }
@@ -115,10 +146,15 @@
 
     async function fetchGalleryItems() {
       if (!token) return;
-      const res = await fetch('/api/admin/list', { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error || 'Unable to load items'); if (res.status === 401) logout(); return; }
-      renderGalleryItems(data.images);
+      const { res, data } = await requestJson('/api/admin/list', { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) {
+        const message = data.error || 'Unable to load items';
+        showToast(message);
+        setStatus(message, 'error');
+        if (res.status === 401) logout();
+        return;
+      }
+      renderGalleryItems(data.images || []);
     }
 
     function renderGalleryItems(items) {
@@ -138,14 +174,19 @@
 
     async function deleteItem(publicId) {
       if (!confirm('Delete this item permanently?')) return;
-      const res = await fetch('/api/admin/delete', {
+      const { res, data } = await requestJson('/api/admin/delete', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ public_id: publicId }),
       });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error || 'Delete failed'); return; }
+      if (!res.ok) {
+        const message = data.error || 'Delete failed';
+        showToast(message);
+        setStatus(message, 'error');
+        return;
+      }
       showToast('Item deleted');
+      setStatus('Item deleted successfully.', 'success');
       fetchGalleryItems();
     }
 
@@ -155,8 +196,14 @@
       const price = document.getElementById('itemPrice').value;
       const description = document.getElementById('itemDescription').value;
       const photos = document.getElementById('itemPhotos').files;
-      if (!photos.length) { showToast('Please upload at least one photo'); return; }
+      if (!photos.length) {
+        const message = 'Please upload at least one photo';
+        showToast(message);
+        setStatus(message, 'error');
+        return;
+      }
 
+      setStatus('Uploading your gallery item…', 'info');
       const formData = new FormData();
       for (const photo of photos) formData.append('photos', photo);
       formData.append('title', title);
@@ -164,14 +211,24 @@
       formData.append('price', price);
       formData.append('description', description);
 
-      const res = await fetch('/api/admin/upload', {
+      const { res, data } = await requestJson('/api/admin/upload', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-      const data = await res.json();
-      if (!res.ok) { showToast(data.error || 'Upload failed'); return; }
-      showToast('Uploaded successfully');
+      if (!res.ok) {
+        const message = data.error || 'Upload failed';
+        console.error('Upload failed', { status: res.status, response: data });
+        showToast(message);
+        setStatus(`Upload failed: ${message}`, 'error');
+        return;
+      }
+      const message = 'Upload complete. Your gallery item is now live.';
+      showToast(message);
+      setStatus(message, 'success');
+      document.getElementById('itemTitle').value = '';
+      document.getElementById('itemPrice').value = '';
+      document.getElementById('itemDescription').value = '';
       document.getElementById('itemPhotos').value = '';
       fetchGalleryItems();
     }
