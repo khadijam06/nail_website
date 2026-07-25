@@ -1,10 +1,12 @@
 let cloudinary;
 let cloudinaryInitError = null;
-let formidable;
+
+let IncomingForm;
 let formidableInitError = null;
 
 try {
   cloudinary = require('cloudinary').v2;
+
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -13,83 +15,181 @@ try {
   });
 } catch (error) {
   cloudinaryInitError = error;
-  console.error('[upload] Cloudinary init failed', error);
+  console.error('[upload] Cloudinary initialization failed', error);
 }
 
 try {
-  formidable = require('formidable');
+  ({ IncomingForm } = require('formidable'));
+
+  if (typeof IncomingForm !== 'function') {
+    throw new Error('Formidable IncomingForm is unavailable');
+  }
 } catch (error) {
   formidableInitError = error;
-  console.error('[upload] formidable init failed', error);
+  console.error('[upload] Formidable initialization failed', error);
 }
 
 const { verifyToken } = require('./auth');
+
+function sendJson(res, statusCode, payload) {
+  if (typeof res.status === 'function') {
+    return res.status(statusCode).json(payload);
+  }
+
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json');
+  return res.end(JSON.stringify(payload));
+}
+
+function getFirstValue(value) {
+  if (Array.isArray(value)) {
+    return value[0] ?? '';
+  }
+
+  return value ?? '';
+}
+
+function cleanText(value) {
+  return String(getFirstValue(value))
+    .replace(/\|/g, ' ')
+    .trim();
+}
+
+module.exports.config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 module.exports = async function handler(req, res) {
   console.log('[upload] request start', {
     method: req?.method,
     url: req?.url,
-    hasAuth: Boolean(req?.headers?.authorization),
+    hasAuthorization: Boolean(req?.headers?.authorization),
   });
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed', expectedMethod: 'POST' });
-  }
-
-  if (!cloudinary || !formidable) {
-    return res.status(500).json({
-      error: 'Upload dependencies failed to initialize',
-      details: cloudinaryInitError?.message || formidableInitError?.message || 'Unknown initialization error',
+    return sendJson(res, 405, {
+      error: 'Method not allowed',
+      expectedMethod: 'POST',
     });
   }
 
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!verifyToken(token)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!cloudinary || !IncomingForm) {
+    return sendJson(res, 500, {
+      error: 'Upload dependencies failed to initialize',
+      details:
+        cloudinaryInitError?.message ||
+        formidableInitError?.message ||
+        'Unknown initialization error',
+    });
+  }
 
-  const missingConfig = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'].filter((key) => !process.env[key]);
-  if (missingConfig.length) {
-    return res.status(500).json({ error: `Cloudinary credentials are missing: ${missingConfig.join(', ')}` });
+  const missingConfig = [
+    'CLOUDINARY_CLOUD_NAME',
+    'CLOUDINARY_API_KEY',
+    'CLOUDINARY_API_SECRET',
+  ].filter((key) => !process.env[key]);
+
+  if (missingConfig.length > 0) {
+    return sendJson(res, 500, {
+      error: 'Cloudinary configuration is incomplete',
+      missing: missingConfig,
+    });
+  }
+
+  const authorizationHeader = req.headers.authorization || '';
+  const token = authorizationHeader.startsWith('Bearer ')
+    ? authorizationHeader.slice(7)
+    : '';
+
+  if (!token || !verifyToken(token)) {
+    return sendJson(res, 401, {
+      error: 'Unauthorized',
+    });
   }
 
   try {
-    const form = formidable({ multiples: true });
+    const form = new IncomingForm({
+      multiples: true,
+      keepExtensions: true,
+      maxFileSize: 10 * 1024 * 1024,
+      maxFiles: 20,
+    });
+
     const { fields, files } = await new Promise((resolve, reject) => {
-      form.parse(req, (err, parsedFields, parsedFiles) => {
-        if (err) return reject(err);
-        resolve({ fields: parsedFields, files: parsedFiles });
+      form.parse(req, (error, parsedFields, parsedFiles) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve({
+          fields: parsedFields || {},
+          files: parsedFiles || {},
+        });
       });
     });
 
-    const uploadedFiles = Array.isArray(files.photos) ? files.photos : [files.photos];
-    const images = uploadedFiles.filter(Boolean);
-    if (!images.length) {
-      return res.status(400).json({ error: 'No images uploaded' });
+    const rawPhotos = files.photos || files.photo || files.images || files.image;
+
+    const uploadedFiles = Array.isArray(rawPhotos)
+      ? rawPhotos
+      : rawPhotos
+        ? [rawPhotos]
+        : [];
+
+    if (uploadedFiles.length === 0) {
+      return sendJson(res, 400, {
+        error: 'No images uploaded',
+      });
     }
 
-    const uploads = await Promise.all(images.map((photo) => {
-      const title = String(fields.title || '').replace(/\|/g, ' ').trim();
-      const category = String(fields.category || '').replace(/\|/g, ' ').trim();
-      const price = String(fields.price || '').replace(/\|/g, ' ').trim();
-      const description = String(fields.description || '').replace(/\|/g, ' ').trim();
+    const title = cleanText(fields.title);
+    const category = cleanText(fields.category);
+    const price = cleanText(fields.price);
+    const description = cleanText(fields.description);
 
-      return cloudinary.uploader.upload(photo.filepath, {
-        folder: 'nailit_gallery',
-        resource_type: 'image',
-        context: {
-          custom: {
-            title,
-            category,
-            price,
-            description,
+    const uploads = await Promise.all(
+      uploadedFiles.map(async (uploadedFile) => {
+        if (!uploadedFile?.filepath) {
+          throw new Error('Uploaded file is missing a temporary filepath');
+        }
+
+        return cloudinary.uploader.upload(uploadedFile.filepath, {
+          folder: 'nailit_gallery',
+          resource_type: 'image',
+          context: {
+            custom: {
+              title,
+              category,
+              price,
+              description,
+            },
           },
-        },
-        transformation: [{ quality: 'auto' }, { fetch_format: 'auto' }],
-      });
-    }));
+          transformation: [
+            {
+              quality: 'auto',
+              fetch_format: 'auto',
+            },
+          ],
+        });
+      }),
+    );
 
-    return res.status(200).json({ uploaded: uploads.map((u) => ({ id: u.asset_id, url: u.secure_url })) });
+    return sendJson(res, 200, {
+      success: true,
+      uploaded: uploads.map((upload) => ({
+        id: upload.asset_id,
+        publicId: upload.public_id,
+        url: upload.secure_url,
+      })),
+    });
   } catch (error) {
-    console.error('[upload] catch', error);
-    return res.status(500).json({ error: error.message || 'Upload failed' });
+    console.error('[upload] request failed', error);
+
+    return sendJson(res, 500, {
+      error: error?.message || 'Upload failed',
+    });
   }
 };
