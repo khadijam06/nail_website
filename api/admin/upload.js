@@ -55,6 +55,15 @@ function cleanText(value) {
     .trim();
 }
 
+function toUploadErrorPayload(error, fallbackMessage) {
+  const nestedMessage = error?.error?.message || error?.cause?.message;
+  return {
+    error: error?.message || nestedMessage || fallbackMessage,
+    code: error?.code || 'UPLOAD_FAILED',
+    details: error?.details || null,
+  };
+}
+
 const handler = async function handler(req, res) {
   console.log('[upload] request start', {
     method: req?.method,
@@ -153,12 +162,14 @@ const handler = async function handler(req, res) {
         return cloudinary.uploader.upload(uploadedFile.filepath, {
           folder: 'nailit_gallery',
           resource_type: 'image',
+          tags: ['nailit_unassigned'],
           context: {
             custom: {
               title,
               category,
               price,
               description,
+              asset_state: 'unassigned',
             },
           },
           transformation: [
@@ -182,9 +193,7 @@ const handler = async function handler(req, res) {
   } catch (error) {
     console.error('[upload] request failed', error);
 
-    return sendJson(res, 500, {
-      error: error?.message || 'Upload failed',
-    });
+    return sendJson(res, 500, toUploadErrorPayload(error, 'Upload failed'));
   }
 };
 

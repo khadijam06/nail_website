@@ -2,6 +2,9 @@ const crypto = require('crypto');
 
 const FOLDER = 'nailit_gallery';
 const VALID_CATEGORIES = ['Chrome', 'French Tips', 'Cateye', '3D Art'];
+const VALID_STATUSES = ['draft', 'published'];
+const ID_PATTERN = /^[a-z0-9][a-z0-9-]{2,95}$/;
+const PUBLIC_ID_PATTERN = /^[a-zA-Z0-9_\-./]{3,255}$/;
 
 function nowIso() {
   return new Date().toISOString();
@@ -33,18 +36,33 @@ function toBool(value) {
 function normalizeCategory(category) {
   const clean = sanitizeText(category, 64);
   const found = VALID_CATEGORIES.find((name) => name.toLowerCase() === clean.toLowerCase());
-  return found || clean;
+  return found || '';
 }
 
 function normalizeStatus(status) {
-  return String(status || '').toLowerCase() === 'draft' ? 'draft' : 'published';
+  const clean = String(status || '').toLowerCase();
+  return VALID_STATUSES.includes(clean) ? clean : 'published';
+}
+
+function sanitizeId(value) {
+  return sanitizeText(value, 96).toLowerCase();
+}
+
+function isValidProductId(id) {
+  return ID_PATTERN.test(id);
+}
+
+function isValidPublicId(value) {
+  return PUBLIC_ID_PATTERN.test(String(value || ''));
 }
 
 function normalizeImageAsset(asset, index) {
   if (!asset || typeof asset !== 'object') return null;
+
   const publicId = sanitizeText(asset.publicId || asset.public_id, 255);
   const url = sanitizeText(asset.url || asset.secure_url, 2000);
-  if (!publicId || !url) return null;
+  if (!publicId || !url || !isValidPublicId(publicId)) return null;
+
   return {
     publicId,
     url,
@@ -56,7 +74,10 @@ function normalizeImageAsset(asset, index) {
 function normalizeProductInput(input = {}, fallback = {}) {
   const title = sanitizeText(input.title || fallback.title, 120);
   const category = normalizeCategory(input.category || fallback.category || '');
-  const shortDescription = sanitizeText(input.shortDescription || input.description || fallback.shortDescription || fallback.description, 500);
+  const shortDescription = sanitizeText(
+    input.shortDescription || input.description || fallback.shortDescription || fallback.description,
+    500,
+  );
   const fullDescription = sanitizeText(input.fullDescription || fallback.fullDescription, 5000);
   const price = sanitizeText(input.price || fallback.price, 64);
   const status = normalizeStatus(input.status || fallback.status);
@@ -73,19 +94,69 @@ function normalizeProductInput(input = {}, fallback = {}) {
   const mainImage = images.find((img) => img.publicId === mainImagePublicIdInput) || images[0] || null;
 
   return {
-    id: sanitizeText(input.id || fallback.id, 96),
+    id: sanitizeId(input.id || fallback.id),
     title,
     category,
     price,
     shortDescription,
     fullDescription,
     status,
-    isCategoryCover,
+    isCategoryCover: status === 'draft' ? false : isCategoryCover,
     images,
     mainImagePublicId: mainImage ? mainImage.publicId : '',
     createdAt: sanitizeText(fallback.createdAt || input.createdAt || nowIso(), 64),
     updatedAt: nowIso(),
   };
+}
+
+function validateProductInput(product, { forUpdate = false } = {}) {
+  const errors = [];
+
+  if (forUpdate) {
+    if (!product.id) {
+      errors.push('Product id is required');
+    } else if (!isValidProductId(product.id)) {
+      errors.push('Product id format is invalid');
+    }
+  }
+
+  if (!product.title) errors.push('Title is required');
+  if (product.title.length > 120) errors.push('Title is too long');
+
+  if (!product.category) {
+    errors.push('Category is required and must be one of Chrome, French Tips, Cateye, or 3D Art');
+  }
+
+  if (!VALID_STATUSES.includes(product.status)) {
+    errors.push('Status must be either draft or published');
+  }
+
+  if (!Array.isArray(product.images) || product.images.length === 0) {
+    errors.push('At least one image is required');
+  }
+
+  product.images.forEach((img, index) => {
+    if (!img.publicId || !isValidPublicId(img.publicId)) {
+      errors.push(`Image ${index + 1} has an invalid publicId`);
+    }
+    if (!img.url || img.url.length > 2000) {
+      errors.push(`Image ${index + 1} has an invalid URL`);
+    }
+  });
+
+  if (product.mainImagePublicId && !product.images.some((img) => img.publicId === product.mainImagePublicId)) {
+    errors.push('mainImagePublicId must reference one of the product images');
+  }
+
+  if (product.price.length > 64) errors.push('Price is too long');
+  if (product.shortDescription.length > 500) errors.push('Short description is too long');
+  if (product.fullDescription.length > 5000) errors.push('Full description is too long');
+
+  if (product.status === 'draft' && product.isCategoryCover) {
+    errors.push('Draft products cannot be category covers');
+  }
+
+  return errors;
 }
 
 function contextForImage(product, image, index) {
@@ -102,6 +173,7 @@ function contextForImage(product, image, index) {
     product_updated_at: product.updatedAt,
     product_image_order: String(index),
     product_is_main: image.publicId === product.mainImagePublicId ? '1' : '0',
+    asset_state: 'assigned',
   };
 }
 
@@ -113,6 +185,21 @@ function mergeResourceToImage(resource) {
     order: Number(resource.context?.custom?.product_image_order || 0),
     isMain: resource.context?.custom?.product_is_main === '1',
   };
+}
+
+function getResourceProductId(resource) {
+  const custom = resource.context?.custom || {};
+  const fromContext = sanitizeId(custom.product_id || '');
+  if (fromContext && isValidProductId(fromContext)) {
+    return fromContext;
+  }
+
+  const hasLegacyDetails = Boolean(custom.title || custom.category || custom.price || custom.description);
+  if (hasLegacyDetails) {
+    return `legacy-${sanitizeText(resource.public_id, 80).replace(/[^a-zA-Z0-9-]/g, '-')}`.toLowerCase();
+  }
+
+  return '';
 }
 
 function productFromResources(productId, resources) {
@@ -127,10 +214,10 @@ function productFromResources(productId, resources) {
 
   return {
     id: productId,
-    title: custom.product_title || source?.display_name || 'Untitled Nail Set',
-    category: custom.product_category || 'Gallery',
-    price: custom.product_price || '',
-    shortDescription: custom.product_short_description || '',
+    title: custom.product_title || custom.title || source?.display_name || 'Untitled Nail Set',
+    category: normalizeCategory(custom.product_category || custom.category || '') || 'Chrome',
+    price: custom.product_price || custom.price || '',
+    shortDescription: custom.product_short_description || custom.description || '',
     fullDescription: custom.product_full_description || '',
     status: normalizeStatus(custom.product_status || 'published'),
     isCategoryCover: custom.product_is_cover === '1',
@@ -147,6 +234,7 @@ async function listProductResources(cloudinary) {
     .expression(`folder:${FOLDER} AND resource_type:image`)
     .max_results(500)
     .with_field('context')
+    .with_field('tags')
     .sort_by('created_at', 'desc')
     .execute();
   return result.resources || [];
@@ -157,8 +245,9 @@ async function listProducts(cloudinary) {
   const grouped = new Map();
 
   resources.forEach((resource) => {
-    const custom = resource.context?.custom || {};
-    const productId = sanitizeText(custom.product_id, 96) || `legacy-${resource.public_id}`;
+    const productId = getResourceProductId(resource);
+    if (!productId) return;
+
     if (!grouped.has(productId)) grouped.set(productId, []);
     grouped.get(productId).push(resource);
   });
@@ -166,52 +255,181 @@ async function listProducts(cloudinary) {
   return Array.from(grouped.entries()).map(([id, group]) => productFromResources(id, group));
 }
 
+async function listUnassignedAssets(cloudinary) {
+  const resources = await listProductResources(cloudinary);
+
+  return resources
+    .filter((resource) => {
+      const productId = getResourceProductId(resource);
+      return !productId;
+    })
+    .map((resource) => ({
+      id: resource.asset_id,
+      publicId: resource.public_id,
+      url: resource.secure_url,
+      createdAt: resource.created_at,
+      bytes: resource.bytes || 0,
+      width: resource.width || null,
+      height: resource.height || null,
+    }));
+}
+
 async function findProductById(cloudinary, id) {
+  const normalizedId = sanitizeId(id);
   const products = await listProducts(cloudinary);
-  return products.find((product) => product.id === id) || null;
+  return products.find((product) => product.id === normalizedId) || null;
+}
+
+async function getAssetState(cloudinary, publicId) {
+  const resource = await cloudinary.api.resource(publicId, {
+    resource_type: 'image',
+    context: true,
+    tags: true,
+  });
+
+  return {
+    context: resource.context?.custom || {},
+    tags: Array.isArray(resource.tags) ? resource.tags : [],
+  };
+}
+
+function toPartialMetadataError(message, details) {
+  const error = new Error(message);
+  error.code = 'PARTIAL_METADATA_UPDATE';
+  error.details = details;
+  return error;
+}
+
+async function rollbackImageStates(cloudinary, snapshots, publicIds) {
+  const failures = [];
+
+  for (const publicId of publicIds) {
+    const state = snapshots.get(publicId);
+    if (!state) continue;
+
+    try {
+      await cloudinary.uploader.explicit(publicId, {
+        type: 'upload',
+        context: state.context,
+        tags: state.tags,
+      });
+    } catch (error) {
+      failures.push({ publicId, error: error?.message || 'Rollback failed' });
+    }
+  }
+
+  return failures;
 }
 
 async function applyProductContextToImages(cloudinary, product) {
-  const contextUpdates = product.images.map(async (image, index) => {
-    await cloudinary.uploader.explicit(image.publicId, {
-      type: 'upload',
-      context: contextForImage(product, image, index),
-      tags: [
-        'nailit_product',
-        `product:${product.id}`,
-        `category:${slug(product.category)}`,
-        `status:${product.status}`,
-        product.isCategoryCover ? `cover:${slug(product.category)}` : '',
-      ].filter(Boolean),
-    });
-  });
+  const snapshots = new Map();
+  const updated = [];
 
-  await Promise.all(contextUpdates);
+  for (const image of product.images) {
+    snapshots.set(image.publicId, await getAssetState(cloudinary, image.publicId));
+  }
+
+  for (let index = 0; index < product.images.length; index += 1) {
+    const image = product.images[index];
+
+    try {
+      await cloudinary.uploader.explicit(image.publicId, {
+        type: 'upload',
+        context: contextForImage(product, image, index),
+        tags: [
+          'nailit_product',
+          `product:${product.id}`,
+          `category:${slug(product.category)}`,
+          `status:${product.status}`,
+          product.isCategoryCover ? `cover:${slug(product.category)}` : '',
+        ].filter(Boolean),
+      });
+      updated.push(image.publicId);
+    } catch (error) {
+      const rollbackFailures = await rollbackImageStates(cloudinary, snapshots, updated);
+      throw toPartialMetadataError(
+        'Failed to update metadata for all product images. Applied changes were rolled back.',
+        {
+          failedImagePublicId: image.publicId,
+          updatedImagePublicIds: updated,
+          rollbackFailures,
+          reason: error?.message || 'Unknown metadata update error',
+        },
+      );
+    }
+  }
 }
 
 async function clearCoverForCategory(cloudinary, category, exceptProductId) {
   const products = await listProducts(cloudinary);
-  const targets = products.filter((product) => product.category === category && product.isCategoryCover && product.id !== exceptProductId);
+  const targets = products.filter(
+    (product) =>
+      product.category === category &&
+      product.isCategoryCover &&
+      product.id !== exceptProductId &&
+      product.status === 'published',
+  );
 
-  await Promise.all(targets.map(async (target) => {
+  for (const target of targets) {
     const updated = {
       ...target,
       isCategoryCover: false,
       updatedAt: nowIso(),
     };
     await applyProductContextToImages(cloudinary, updated);
-  }));
+  }
+}
+
+function ensureRemoveIdsBelongToProduct(existingProduct, removeIds) {
+  const existingIds = new Set(existingProduct.images.map((img) => img.publicId));
+  const invalid = removeIds.filter((publicId) => !existingIds.has(publicId));
+
+  if (invalid.length) {
+    const error = new Error('One or more images marked for deletion do not belong to this product');
+    error.code = 'INVALID_REMOVE_IMAGES';
+    error.details = { invalidPublicIds: invalid };
+    throw error;
+  }
+}
+
+function ensureNoImplicitImageDrop(existingProduct, normalizedProduct, removeIds) {
+  const existingIds = new Set(existingProduct.images.map((img) => img.publicId));
+  const nextIds = new Set(normalizedProduct.images.map((img) => img.publicId));
+  const removedSet = new Set(removeIds);
+
+  const missing = [];
+  existingIds.forEach((publicId) => {
+    if (!nextIds.has(publicId) && !removedSet.has(publicId)) {
+      missing.push(publicId);
+    }
+  });
+
+  if (missing.length) {
+    const error = new Error('Update payload is missing existing product images. Explicitly remove images before saving.');
+    error.code = 'MISSING_EXISTING_IMAGES';
+    error.details = { missingPublicIds: missing };
+    throw error;
+  }
 }
 
 async function createProduct(cloudinary, payload) {
+  const generatedId = payload.id || `${slug(payload.category || 'set')}-${uid()}`;
   const normalized = normalizeProductInput(payload, {
-    id: payload.id || `${slug(payload.category || 'set')}-${uid()}`,
+    id: sanitizeId(generatedId),
     createdAt: nowIso(),
   });
 
-  if (!normalized.title) throw new Error('Title is required');
-  if (!normalized.category) throw new Error('Category is required');
-  if (!normalized.mainImagePublicId) throw new Error('Main image is required');
+  if (!normalized.id || !isValidProductId(normalized.id)) {
+    throw new Error('Generated product ID is invalid');
+  }
+
+  const validationErrors = validateProductInput(normalized, { forUpdate: false });
+  if (validationErrors.length) {
+    const error = new Error(validationErrors.join('; '));
+    error.code = 'VALIDATION_ERROR';
+    error.details = { validationErrors };
+    throw error;
+  }
 
   if (normalized.isCategoryCover) {
     await clearCoverForCategory(cloudinary, normalized.category, normalized.id);
@@ -223,7 +441,12 @@ async function createProduct(cloudinary, payload) {
 
 async function updateProduct(cloudinary, payload) {
   if (!payload?.id) throw new Error('Product id is required');
-  const existing = await findProductById(cloudinary, payload.id);
+  const id = sanitizeId(payload.id);
+  if (!isValidProductId(id)) {
+    throw new Error('Product id format is invalid');
+  }
+
+  const existing = await findProductById(cloudinary, id);
   if (!existing) throw new Error('Product not found');
 
   const normalized = normalizeProductInput(payload, existing);
@@ -232,10 +455,17 @@ async function updateProduct(cloudinary, payload) {
 
   const removedImages = (payload.removeImagePublicIds || [])
     .map((value) => sanitizeText(value, 255))
-    .filter(Boolean);
+    .filter((value) => value && isValidPublicId(value));
+
+  ensureRemoveIdsBelongToProduct(existing, removedImages);
+  ensureNoImplicitImageDrop(existing, normalized, removedImages);
 
   if (removedImages.length) {
-    await Promise.all(removedImages.map((publicId) => cloudinary.uploader.destroy(publicId, { resource_type: 'image' })));
+    await Promise.all(
+      removedImages.map((publicId) =>
+        cloudinary.uploader.destroy(publicId, { resource_type: 'image' }),
+      ),
+    );
     normalized.images = normalized.images.filter((img) => !removedImages.includes(img.publicId));
   }
 
@@ -245,6 +475,14 @@ async function updateProduct(cloudinary, payload) {
 
   if (!normalized.images.some((img) => img.publicId === normalized.mainImagePublicId)) {
     normalized.mainImagePublicId = normalized.images[0].publicId;
+  }
+
+  const validationErrors = validateProductInput(normalized, { forUpdate: true });
+  if (validationErrors.length) {
+    const error = new Error(validationErrors.join('; '));
+    error.code = 'VALIDATION_ERROR';
+    error.details = { validationErrors };
+    throw error;
   }
 
   if (normalized.isCategoryCover) {
@@ -265,6 +503,8 @@ async function duplicateProduct(cloudinary, payload) {
     const copy = await cloudinary.uploader.upload(image.url, {
       folder: FOLDER,
       resource_type: 'image',
+      tags: ['nailit_unassigned'],
+      context: { custom: { asset_state: 'unassigned' } },
     });
     uploaded.push({
       publicId: copy.public_id,
@@ -291,14 +531,62 @@ async function duplicateProduct(cloudinary, payload) {
 
 async function deleteProduct(cloudinary, payload) {
   if (!payload?.id) throw new Error('Product id is required');
-  const product = await findProductById(cloudinary, payload.id);
+  const id = sanitizeId(payload.id);
+  if (!isValidProductId(id)) {
+    throw new Error('Product id format is invalid');
+  }
+
+  const product = await findProductById(cloudinary, id);
   if (!product) return false;
 
-  await Promise.all(
-    product.images.map((image) => cloudinary.uploader.destroy(image.publicId, { resource_type: 'image' })),
-  );
+  const failures = [];
+
+  for (const image of product.images) {
+    try {
+      const resource = await cloudinary.api.resource(image.publicId, {
+        resource_type: 'image',
+        context: true,
+      });
+      const ownerId = sanitizeId(resource.context?.custom?.product_id || '');
+      if (ownerId !== id) {
+        failures.push({ publicId: image.publicId, reason: 'Image ownership mismatch' });
+        continue;
+      }
+
+      await cloudinary.uploader.destroy(image.publicId, { resource_type: 'image' });
+    } catch (error) {
+      failures.push({ publicId: image.publicId, reason: error?.message || 'Delete failed' });
+    }
+  }
+
+  if (failures.length) {
+    const error = new Error('Failed to delete all product images');
+    error.code = 'PARTIAL_DELETE_FAILURE';
+    error.details = { failures };
+    throw error;
+  }
 
   return true;
+}
+
+async function deleteUnassignedAsset(cloudinary, publicId) {
+  const cleanPublicId = sanitizeText(publicId, 255);
+  if (!cleanPublicId || !isValidPublicId(cleanPublicId)) {
+    throw new Error('Invalid publicId');
+  }
+
+  const resource = await cloudinary.api.resource(cleanPublicId, {
+    resource_type: 'image',
+    context: true,
+  });
+
+  const ownerId = getResourceProductId(resource);
+  if (ownerId) {
+    throw new Error('Asset is assigned to a product and cannot be deleted as unassigned');
+  }
+
+  const result = await cloudinary.uploader.destroy(cleanPublicId, { resource_type: 'image' });
+  return result.result === 'ok';
 }
 
 function toPublicProduct(product) {
@@ -343,12 +631,16 @@ function filterProducts(products, { category, status, search }) {
 
 module.exports = {
   VALID_CATEGORIES,
+  VALID_STATUSES,
+  isValidProductId,
   listProducts,
+  listUnassignedAssets,
   findProductById,
   createProduct,
   updateProduct,
   duplicateProduct,
   deleteProduct,
+  deleteUnassignedAsset,
   toPublicProduct,
   sortProducts,
   filterProducts,

@@ -156,6 +156,15 @@
         </div>
         <div id="productsList"></div>
       </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h2>Unassigned Uploads</h2>
+          <button id="refreshUnassignedBtn" class="btn btn-secondary">Refresh</button>
+        </div>
+        <p class="muted" style="margin-bottom:10px;">These are uploaded images not attached to any saved product yet.</p>
+        <div id="unassignedAssetsList"></div>
+      </div>
     </div>
   </div>
 
@@ -163,6 +172,7 @@
     const state = {
       token: localStorage.getItem('adminToken') || '',
       products: [],
+      unassignedAssets: [],
       editingId: '',
       images: [],
       removeImagePublicIds: [],
@@ -176,6 +186,36 @@
     function setStatus(message, type = 'info') {
       statusMessage.textContent = message || '';
       statusMessage.className = `status ${type}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatApiError(data, fallback) {
+      if (!data || typeof data !== 'object') return fallback;
+
+      const parts = [];
+      if (data.error) parts.push(String(data.error));
+
+      if (data.details?.validationErrors && Array.isArray(data.details.validationErrors)) {
+        parts.push(data.details.validationErrors.join('; '));
+      }
+
+      if (data.details?.reason) {
+        parts.push(`Reason: ${data.details.reason}`);
+      }
+
+      if (data.details?.failedImagePublicId) {
+        parts.push(`Failed image: ${data.details.failedImagePublicId}`);
+      }
+
+      return parts.filter(Boolean).join(' | ') || fallback;
     }
 
     async function requestJson(url, options = {}) {
@@ -227,6 +267,7 @@
       showApp();
       setStatus('Logged in successfully.', 'success');
       await loadProducts();
+      await loadUnassignedAssets();
       resetForm();
     }
 
@@ -250,24 +291,25 @@
       el.innerHTML = state.products.map((product) => {
         const thumb = product.mainImageUrl || product.images?.[0]?.url || 'brand_assets/nail logo.jpg';
         const created = product.createdAt ? new Date(product.createdAt).toLocaleDateString() : '-';
+        const encodedId = encodeURIComponent(product.id || '');
         return `
           <div class="row">
-            <div><img class="thumb" src="${thumb}" alt="${product.title}"></div>
+            <div><img class="thumb" src="${escapeHtml(thumb)}" alt="${escapeHtml(product.title)}"></div>
             <div>
-              <div style="font-weight:700;">${product.title || 'Untitled'}</div>
-              <div class="small">${product.shortDescription || ''}</div>
+              <div style="font-weight:700;">${escapeHtml(product.title || 'Untitled')}</div>
+              <div class="small">${escapeHtml(product.shortDescription || '')}</div>
             </div>
-            <div>${product.category || '-'}</div>
-            <div>${product.price || '-'}</div>
+            <div>${escapeHtml(product.category || '-')}</div>
+            <div>${escapeHtml(product.price || '-')}</div>
             <div>${productBadgeStatus(product.status)}</div>
             <div>${product.isCategoryCover ? '<span class="badge cover">Cover</span>' : '-'}</div>
-            <div class="small">${created}</div>
+            <div class="small">${escapeHtml(created)}</div>
             <div class="actions">
-              <button class="btn btn-secondary" onclick="startEdit('${product.id}')">Edit</button>
-              <button class="btn btn-secondary" onclick="duplicateProduct('${product.id}')">Duplicate</button>
-              <button class="btn btn-secondary" onclick="toggleStatus('${product.id}', '${product.status === 'published' ? 'draft' : 'published'}')">${product.status === 'published' ? 'Unpublish' : 'Publish'}</button>
-              <button class="btn btn-secondary" onclick="setCover('${product.id}')">Set Cover</button>
-              <button class="btn btn-danger" onclick="deleteProduct('${product.id}')">Delete</button>
+              <button class="btn btn-secondary" onclick="startEdit('${encodedId}')">Edit</button>
+              <button class="btn btn-secondary" onclick="duplicateProduct('${encodedId}')">Duplicate</button>
+              <button class="btn btn-secondary" onclick="toggleStatus('${encodedId}', '${product.status === 'published' ? 'draft' : 'published'}')">${product.status === 'published' ? 'Unpublish' : 'Publish'}</button>
+              <button class="btn btn-secondary" onclick="setCover('${encodedId}')">Set Cover</button>
+              <button class="btn btn-danger" onclick="deleteProduct('${encodedId}')">Delete</button>
             </div>
           </div>
         `;
@@ -287,7 +329,7 @@
 
       if (!res.ok) {
         if (res.status === 401) logout();
-        setStatus(data.error || 'Failed to load products', 'error');
+        setStatus(formatApiError(data, 'Failed to load products'), 'error');
         return;
       }
 
@@ -317,7 +359,8 @@
     }
 
     function startEdit(id) {
-      const product = state.products.find((p) => p.id === id);
+      const cleanId = decodeURIComponent(id || '');
+      const product = state.products.find((p) => p.id === cleanId);
       if (!product) return;
 
       state.editingId = product.id;
@@ -351,10 +394,10 @@
 
       list.innerHTML = state.images.map((img, index) => `
         <div class="img-row">
-          <img src="${img.url}" alt="Product image ${index + 1}">
+          <img src="${escapeHtml(img.url)}" alt="Product image ${index + 1}">
           <div>
-            <div style="font-weight:700;word-break:break-all;">${img.publicId}</div>
-            <label class="small"><input type="radio" name="mainImageRadio" value="${img.publicId}" ${state.selectedMainPublicId === img.publicId ? 'checked' : ''}> Main image</label>
+            <div style="font-weight:700;word-break:break-all;">${escapeHtml(img.publicId)}</div>
+            <label class="small"><input type="radio" name="mainImageRadio" value="${escapeHtml(img.publicId)}" ${state.selectedMainPublicId === img.publicId ? 'checked' : ''}> Main image</label>
           </div>
           <div class="img-controls">
             <button class="btn btn-secondary" type="button" onclick="moveImage(${index}, -1)">Up</button>
@@ -406,7 +449,7 @@
       });
 
       if (!res.ok) {
-        throw new Error(data.error || 'Image upload failed');
+        throw new Error(formatApiError(data, 'Image upload failed'));
       }
 
       return (data.uploaded || []).map((item, index) => ({
@@ -481,41 +524,47 @@
         });
 
         if (!res.ok) {
-          setStatus(data.error || 'Save failed', 'error');
+          setStatus(formatApiError(data, 'Save failed'), 'error');
+          await loadUnassignedAssets();
           return;
         }
 
         setStatus(isEdit ? 'Product updated.' : 'Product created.', 'success');
         resetForm();
         await loadProducts();
+        await loadUnassignedAssets();
       } catch (error) {
         console.error('[admin] save failed', error);
         setStatus(error.message || 'Save failed', 'error');
+        await loadUnassignedAssets();
       }
     }
 
     async function duplicateProduct(id) {
+      const cleanId = decodeURIComponent(id || '');
       const { res, data } = await requestJson('/api/admin/products', {
         method: 'POST',
         headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ action: 'duplicate', id }),
+        body: JSON.stringify({ action: 'duplicate', id: cleanId }),
       });
       if (!res.ok) {
-        setStatus(data.error || 'Duplicate failed', 'error');
+        setStatus(formatApiError(data, 'Duplicate failed'), 'error');
         return;
       }
       setStatus('Product duplicated as draft.', 'success');
       await loadProducts();
+      await loadUnassignedAssets();
     }
 
     async function toggleStatus(id, status) {
+      const cleanId = decodeURIComponent(id || '');
       const { res, data } = await requestJson('/api/admin/products', {
         method: 'PUT',
         headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ id, status }),
+        body: JSON.stringify({ id: cleanId, status }),
       });
       if (!res.ok) {
-        setStatus(data.error || 'Status update failed', 'error');
+        setStatus(formatApiError(data, 'Status update failed'), 'error');
         return;
       }
       setStatus('Status updated.', 'success');
@@ -523,13 +572,14 @@
     }
 
     async function setCover(id) {
+      const cleanId = decodeURIComponent(id || '');
       const { res, data } = await requestJson('/api/admin/products', {
         method: 'PUT',
         headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ id, isCategoryCover: true }),
+        body: JSON.stringify({ id: cleanId, isCategoryCover: true }),
       });
       if (!res.ok) {
-        setStatus(data.error || 'Cover update failed', 'error');
+        setStatus(formatApiError(data, 'Cover update failed'), 'error');
         return;
       }
       setStatus('Category cover updated.', 'success');
@@ -537,19 +587,83 @@
     }
 
     async function deleteProduct(id) {
+      const cleanId = decodeURIComponent(id || '');
       if (!confirm('Delete this product and all its images permanently?')) return;
       const { res, data } = await requestJson('/api/admin/products', {
         method: 'DELETE',
         headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id: cleanId }),
       });
       if (!res.ok) {
-        setStatus(data.error || 'Delete failed', 'error');
+        setStatus(formatApiError(data, 'Delete failed'), 'error');
         return;
       }
       setStatus('Product deleted.', 'success');
-      if (state.editingId === id) resetForm();
+      if (state.editingId === cleanId) resetForm();
       await loadProducts();
+      await loadUnassignedAssets();
+    }
+
+    async function loadUnassignedAssets() {
+      const { res, data } = await requestJson('/api/admin/unassigned', {
+        headers: authHeaders(),
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) logout();
+        setStatus(formatApiError(data, 'Failed to load unassigned assets'), 'error');
+        return;
+      }
+
+      state.unassignedAssets = data.assets || [];
+      renderUnassignedAssets();
+    }
+
+    function renderUnassignedAssets() {
+      const list = document.getElementById('unassignedAssetsList');
+      if (!list) return;
+
+      if (!state.unassignedAssets.length) {
+        list.innerHTML = '<p class="muted">No unassigned images. Great.</p>';
+        return;
+      }
+
+      list.innerHTML = state.unassignedAssets.map((asset) => {
+        const encodedPublicId = encodeURIComponent(asset.publicId || '');
+        const date = asset.createdAt ? new Date(asset.createdAt).toLocaleString() : '-';
+        return `
+          <div class="img-row">
+            <img src="${escapeHtml(asset.url)}" alt="Unassigned image">
+            <div>
+              <div style="font-weight:700;word-break:break-all;">${escapeHtml(asset.publicId)}</div>
+              <div class="small">Created: ${escapeHtml(date)}</div>
+            </div>
+            <div class="img-controls">
+              <button class="btn btn-danger" type="button" onclick="deleteUnassignedAsset('${encodedPublicId}')">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function deleteUnassignedAsset(encodedPublicId) {
+      const publicId = decodeURIComponent(encodedPublicId || '');
+      if (!publicId) return;
+      if (!confirm('Delete this unassigned image permanently?')) return;
+
+      const { res, data } = await requestJson('/api/admin/unassigned', {
+        method: 'DELETE',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ publicId }),
+      });
+
+      if (!res.ok) {
+        setStatus(formatApiError(data, 'Failed to delete unassigned image'), 'error');
+        return;
+      }
+
+      setStatus('Unassigned image deleted.', 'success');
+      await loadUnassignedAssets();
     }
 
     document.getElementById('loginBtn').addEventListener('click', login);
@@ -557,6 +671,7 @@
     document.getElementById('newProductBtn').addEventListener('click', resetForm);
     document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
     document.getElementById('refreshBtn').addEventListener('click', loadProducts);
+    document.getElementById('refreshUnassignedBtn').addEventListener('click', loadUnassignedAssets);
     document.getElementById('applyFiltersBtn').addEventListener('click', loadProducts);
     document.getElementById('saveDraftBtn').addEventListener('click', () => saveProduct('draft'));
 
@@ -569,10 +684,20 @@
       showApp();
       setStatus('Loading products...', 'info');
       loadProducts();
+      loadUnassignedAssets();
       resetForm();
     } else {
       showLogin();
     }
+
+    window.startEdit = startEdit;
+    window.duplicateProduct = duplicateProduct;
+    window.toggleStatus = toggleStatus;
+    window.setCover = setCover;
+    window.deleteProduct = deleteProduct;
+    window.moveImage = moveImage;
+    window.removeImageAt = removeImageAt;
+    window.deleteUnassignedAsset = deleteUnassignedAsset;
   </script>
 </body>
 </html>

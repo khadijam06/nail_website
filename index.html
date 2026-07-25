@@ -726,6 +726,15 @@
     renderBasketList();
   }
 
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   document.getElementById('basketToggle').onclick = openBasketModal;
   document.addEventListener('DOMContentLoaded', () => {
     updateBasketCount();
@@ -738,7 +747,7 @@
       const category = imgEl.getAttribute('data-cover-image');
       const cover = covers[category];
       if (cover && cover.imageUrl) {
-        imgEl.src = cover.imageUrl;
+        imgEl.src = String(cover.imageUrl);
       }
     });
   }
@@ -769,8 +778,8 @@
 
     grid.innerHTML = allImages.slice(0, 6).map(img => `
       <div class="gal-item fade d1">
-        <img src="${img.url}" alt="${img.title}">
-        <div class="gal-overlay"><span>${img.title}</span></div>
+        <img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.title)}">
+        <div class="gal-overlay"><span>${escapeHtml(img.title)}</span></div>
       </div>
     `).join('');
     message.style.display = 'block';

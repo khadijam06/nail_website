@@ -9,7 +9,40 @@ const {
   deleteProduct,
   filterProducts,
   sortProducts,
+  VALID_CATEGORIES,
+  VALID_STATUSES,
 } = require('../lib/products');
+
+function toErrorPayload(error, fallbackMessage) {
+  const nestedMessage = error?.error?.message || error?.cause?.message;
+  return {
+    error: error?.message || nestedMessage || fallbackMessage,
+    code: error?.code || 'PRODUCT_OPERATION_FAILED',
+    details: error?.details || null,
+  };
+}
+
+function validateListQuery(query) {
+  const errors = [];
+  const allowedSort = ['newest', 'oldest', 'alpha'];
+  if (query.sort && !allowedSort.includes(query.sort)) {
+    errors.push('sort must be one of newest, oldest, alpha');
+  }
+
+  if (query.status && query.status !== 'all' && !VALID_STATUSES.includes(query.status)) {
+    errors.push('status must be all, draft, or published');
+  }
+
+  if (query.category && query.category !== 'all' && !VALID_CATEGORIES.includes(query.category)) {
+    errors.push('category must be all, Chrome, French Tips, Cateye, or 3D Art');
+  }
+
+  if (query.search && String(query.search).length > 120) {
+    errors.push('search query is too long');
+  }
+
+  return errors;
+}
 
 module.exports = async function handler(req, res) {
   console.log('[admin/products] request start', {
@@ -41,6 +74,15 @@ module.exports = async function handler(req, res) {
 
     if (req.method === 'GET') {
       const query = req.query || {};
+      const queryErrors = validateListQuery(query);
+      if (queryErrors.length) {
+        return sendJson(res, 400, {
+          error: 'Invalid query parameters',
+          code: 'INVALID_QUERY',
+          details: { queryErrors },
+        });
+      }
+
       const products = await listProducts(cloudinary);
       const filtered = filterProducts(products, {
         category: query.category || 'all',
@@ -66,6 +108,14 @@ module.exports = async function handler(req, res) {
         return sendJson(res, 200, { success: true, product });
       }
 
+      if (action !== 'create') {
+        return sendJson(res, 400, {
+          error: 'Unsupported action',
+          code: 'INVALID_ACTION',
+          details: { allowedActions: ['create', 'duplicate'] },
+        });
+      }
+
       const product = await createProduct(cloudinary, body);
       return sendJson(res, 201, { success: true, product });
     }
@@ -86,6 +136,9 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     console.error('[admin/products] catch', error);
-    return sendJson(res, 500, { error: error?.message || 'Product operation failed' });
+    const statusCode = error?.code === 'VALIDATION_ERROR' || error?.code === 'INVALID_REMOVE_IMAGES' || error?.code === 'MISSING_EXISTING_IMAGES'
+      ? 400
+      : 500;
+    return sendJson(res, statusCode, toErrorPayload(error, 'Product operation failed'));
   }
 };

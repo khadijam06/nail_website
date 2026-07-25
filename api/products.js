@@ -2,6 +2,25 @@ const { getCloudinaryState } = require('./lib/cloudinary-client');
 const { sendJson } = require('./lib/http');
 const { listProducts, filterProducts, sortProducts, toPublicProduct, VALID_CATEGORIES } = require('./lib/products');
 
+function validatePublicQuery(query) {
+  const errors = [];
+  const allowedSort = ['newest', 'oldest', 'alpha'];
+
+  if (query.sort && !allowedSort.includes(query.sort)) {
+    errors.push('sort must be one of newest, oldest, alpha');
+  }
+
+  if (query.category && query.category !== 'all' && !VALID_CATEGORIES.includes(query.category)) {
+    errors.push('category must be all, Chrome, French Tips, Cateye, or 3D Art');
+  }
+
+  if (query.search && String(query.search).length > 120) {
+    errors.push('search query is too long');
+  }
+
+  return errors;
+}
+
 const FALLBACK_COVERS = {
   Chrome: 'brand_assets/style-cards/chrome.jpg',
   'French Tips': 'brand_assets/style-cards/french-tips.jpg',
@@ -54,6 +73,15 @@ module.exports = async function handler(req, res) {
     }
 
     const query = req.query || {};
+    const queryErrors = validatePublicQuery(query);
+    if (queryErrors.length) {
+      return sendJson(res, 400, {
+        error: 'Invalid query parameters',
+        code: 'INVALID_QUERY',
+        details: { queryErrors },
+      });
+    }
+
     const allProducts = await listProducts(cloudinary);
     const publishedProducts = allProducts.filter((product) => product.status === 'published');
 
@@ -72,6 +100,7 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     console.error('[products] catch', error);
-    return sendJson(res, 500, { error: error?.message || 'Unable to load products' });
+      const nestedMessage = error?.error?.message || error?.cause?.message;
+      return sendJson(res, 500, { error: error?.message || nestedMessage || 'Unable to load products' });
   }
 };
