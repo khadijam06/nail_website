@@ -53,28 +53,16 @@ function getResourceContext(resource) {
 
 async function setImageMetadata(cloudinary, publicId, contextObj, tags) {
   const context = toCloudinaryContext(contextObj);
-  if (context) {
-    await cloudinary.uploader.add_context(context, [publicId], {
-      type: 'upload',
-      resource_type: 'image',
-    });
-  }
-
-  await cloudinary.uploader.remove_all_tags([publicId], {
-    type: 'upload',
-    resource_type: 'image',
-  });
-
   const cleanTags = Array.isArray(tags)
     ? tags.map((tag) => sanitizeText(tag, 120)).filter(Boolean)
     : [];
 
-  if (cleanTags.length) {
-    await cloudinary.uploader.add_tag(cleanTags.join(','), [publicId], {
-      type: 'upload',
-      resource_type: 'image',
-    });
-  }
+  await cloudinary.api.update(publicId, {
+    type: 'upload',
+    resource_type: 'image',
+    context: context || undefined,
+    tags: cleanTags,
+  });
 }
 
 function toBool(value) {
@@ -393,6 +381,13 @@ async function applyProductContextToImages(cloudinary, product) {
           product.isCategoryCover ? `cover:${slug(product.category)}` : '',
         ],
       );
+
+      const persisted = await getAssetState(cloudinary, image.publicId);
+      const persistedProductId = sanitizeId(persisted.context?.product_id || '');
+      if (persistedProductId !== product.id) {
+        throw new Error('Metadata update did not persist product assignment');
+      }
+
       updated.push(image.publicId);
     } catch (error) {
       const rollbackFailures = await rollbackImageStates(cloudinary, snapshots, updated);
