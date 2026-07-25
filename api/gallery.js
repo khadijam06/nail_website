@@ -3,6 +3,7 @@ let cloudinaryInitError = null;
 
 try {
   cloudinary = require('cloudinary').v2;
+
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -11,41 +12,87 @@ try {
   });
 } catch (error) {
   cloudinaryInitError = error;
-  console.error('[gallery] Cloudinary init failed', error);
+  console.error('[gallery] Cloudinary initialization failed', error);
+}
+
+function sendJson(res, statusCode, payload) {
+  if (typeof res.status === 'function') {
+    return res.status(statusCode).json(payload);
+  }
+
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json');
+  return res.end(JSON.stringify(payload));
 }
 
 module.exports = async function handler(req, res) {
-  console.log('[gallery] request start', { method: req?.method, url: req?.url });
+  console.log('[gallery] request start', {
+    method: req?.method,
+    url: req?.url,
+  });
+
+  if (req.method !== 'GET') {
+    return sendJson(res, 405, {
+      error: 'Method not allowed',
+      expectedMethod: 'GET',
+    });
+  }
+
+  if (!cloudinary) {
+    return sendJson(res, 500, {
+      error: 'Cloudinary failed to initialize',
+      details:
+        cloudinaryInitError?.message ||
+        'Unknown Cloudinary initialization error',
+    });
+  }
+
+  const missingConfig = [
+    'CLOUDINARY_CLOUD_NAME',
+    'CLOUDINARY_API_KEY',
+    'CLOUDINARY_API_SECRET',
+  ].filter((key) => !process.env[key]);
+
+  if (missingConfig.length > 0) {
+    return sendJson(res, 500, {
+      error: 'Cloudinary configuration is incomplete',
+      missing: missingConfig,
+    });
+  }
 
   try {
-    if (req.method !== 'GET') {
-      return res.status(405).json({ error: 'Method not allowed', expectedMethod: 'GET' });
-    }
-
-    if (!cloudinary) {
-      return res.status(500).json({ error: 'Cloudinary failed to initialize', details: cloudinaryInitError?.message || 'Unknown initialization error' });
-    }
-
-    const folder = 'nailit_gallery';
     const result = await cloudinary.search
-      .expression(`folder:${folder} AND resource_type:image`)
-      .sort_by('uploaded_at', 'desc')
+      .expression('folder:nailit_gallery AND resource_type:image')
+      .sort_by('created_at', 'desc')
       .max_results(50)
+      .with_field('context')
       .execute();
 
-    const images = result.resources.map(item => ({
-      id: item.asset_id,
-      title: item.context?.custom?.title || '',
-      category: item.context?.custom?.category || '',
-      description: item.context?.custom?.description || '',
-      price: item.context?.custom?.price || '',
-      url: item.secure_url,
-      thumbnail: item.secure_url,
-    }));
+    const images = (result.resources || []).map((item) => {
+      const custom = item.context?.custom || {};
 
-    return res.status(200).json({ images });
+      return {
+        id: item.asset_id,
+        publicId: item.public_id,
+        title: custom.title || '',
+        category: custom.category || '',
+        description: custom.description || '',
+        price: custom.price || '',
+        url: item.secure_url,
+        thumbnail: item.secure_url,
+        createdAt: item.created_at,
+      };
+    });
+
+    return sendJson(res, 200, {
+      success: true,
+      images,
+    });
   } catch (error) {
-    console.error('[gallery] catch', error);
-    return res.status(500).json({ error: error.message || 'Unable to load gallery' });
+    console.error('[gallery] failed to load images', error);
+
+    return sendJson(res, 500, {
+      error: error?.message || 'Unable to load gallery',
+    });
   }
 };
