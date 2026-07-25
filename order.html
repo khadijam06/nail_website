@@ -270,7 +270,10 @@
 <!-- ORDER FORM -->
 <section style="background:white">
   <div class="container">
-    <form id="orderForm">
+    <form id="orderForm" action="https://formsubmit.co/ajax/nailitbyk28@gmail.com" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="_subject" value="New Nail Order Request">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_template" value="table">
       <!-- SIZING UPLOAD -->
       <div class="form-section fade">
         <h3><span class="form-section-icon">📏</span> Your Sizing Photos</h3>
@@ -354,7 +357,7 @@
         <button type="submit" class="btn-primary">Submit Your Order 💌</button>
         <a href="index.html" class="btn-secondary">Back to Home</a>
       </div>
-      <p class="form-note">Once you submit, we'll review your sizing and inspiration photos. We'll contact you at the phone number provided within 24 hours to confirm details and pricing.</p>
+      <p class="form-note">Once you submit, your order details and uploaded photos will be sent to your email address as part of the request.</p>
     </form>
   </div>
 </section>
@@ -424,39 +427,35 @@
   // Form submission
   document.getElementById('orderForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    
-    // Collect form data
+
     const formData = new FormData(this);
-    
-    // In a real application, you would send this to a server
-    // For now, show success message and log the data
-    console.log('Order submitted with data:', {
-      phone: formData.get('phone'),
-      specialRequests: formData.get('specialRequests'),
-      delivery: formData.get('delivery'),
-      leftHandFiles: formData.getAll('leftHand').length,
-      rightHandFiles: formData.getAll('rightHand').length,
-      inspirationFiles: formData.getAll('inspiration').length
-    });
-
-    // Show success message
     const successBox = document.getElementById('successBox');
-    successBox.classList.add('show');
-    
-    // Scroll to success message
-    setTimeout(() => {
-      successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
 
-    // Reset form after 2 seconds
-    setTimeout(() => {
-      this.reset();
-      successBox.classList.remove('show');
-      // Clear all file previews
-      fileInputs.forEach(inputId => {
-        document.getElementById(inputId + 'Preview').innerHTML = '';
+    successBox.innerHTML = '📧 Sending your order details and photos now...';
+    successBox.classList.add('show');
+
+    fetch(this.action, {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Submission failed');
+        }
+        successBox.innerHTML = '✅ Your order has been sent successfully. We will review it shortly.';
+        this.reset();
+        fileInputs.forEach(inputId => {
+          document.getElementById(inputId + 'Preview').innerHTML = '';
+        });
+      })
+      .catch(() => {
+        successBox.innerHTML = '⚠️ The submission could not be completed. Please email nailitbyk28@gmail.com directly with your order details and photos.';
+      })
+      .finally(() => {
+        setTimeout(() => {
+          successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
       });
-    }, 3000);
   });
 
   // Scroll fade-in
