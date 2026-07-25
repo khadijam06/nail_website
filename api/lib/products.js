@@ -40,6 +40,17 @@ function toCloudinaryContext(contextObj) {
     .join('|');
 }
 
+function getResourceContext(resource) {
+  const raw = resource?.context;
+  if (!raw || typeof raw !== 'object') return {};
+
+  if (raw.custom && typeof raw.custom === 'object') {
+    return raw.custom;
+  }
+
+  return raw;
+}
+
 async function setImageMetadata(cloudinary, publicId, contextObj, tags) {
   const context = toCloudinaryContext(contextObj);
   if (context) {
@@ -218,17 +229,18 @@ function contextForImage(product, image, index) {
 }
 
 function mergeResourceToImage(resource) {
+  const context = getResourceContext(resource);
   return {
     publicId: resource.public_id,
     id: resource.asset_id,
     url: resource.secure_url,
-    order: Number(resource.context?.custom?.product_image_order || 0),
-    isMain: resource.context?.custom?.product_is_main === '1',
+    order: Number(context.product_image_order || 0),
+    isMain: context.product_is_main === '1',
   };
 }
 
 function getResourceProductId(resource) {
-  const custom = resource.context?.custom || {};
+  const custom = getResourceContext(resource);
   const fromContext = sanitizeId(custom.product_id || '');
   if (fromContext && isValidProductId(fromContext)) {
     return fromContext;
@@ -250,7 +262,7 @@ function productFromResources(productId, resources) {
 
   const mainImage = images.find((img) => img.isMain) || images[0] || null;
   const source = mainImage ? resources.find((r) => r.public_id === mainImage.publicId) : resources[0];
-  const custom = source?.context?.custom || {};
+  const custom = getResourceContext(source);
 
   return {
     id: productId,
@@ -328,7 +340,7 @@ async function getAssetState(cloudinary, publicId) {
   });
 
   return {
-    context: resource.context?.custom || {},
+    context: getResourceContext(resource),
     tags: Array.isArray(resource.tags) ? resource.tags : [],
   };
 }
@@ -584,7 +596,7 @@ async function deleteProduct(cloudinary, payload) {
         resource_type: 'image',
         context: true,
       });
-      const ownerId = sanitizeId(resource.context?.custom?.product_id || '');
+      const ownerId = sanitizeId(getResourceContext(resource).product_id || '');
       if (ownerId !== id) {
         failures.push({ publicId: image.publicId, reason: 'Image ownership mismatch' });
         continue;
