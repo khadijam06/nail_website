@@ -1,20 +1,31 @@
-const { Cloudinary } = require('cloudinary').v2;
+let cloudinary;
+let cloudinaryInitError = null;
 
-const cloudinary = new Cloudinary({
-  cloud: {
+try {
+  cloudinary = require('cloudinary').v2;
+  cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
-  },
-  url: { secure: true },
-});
+    secure: true,
+  });
+} catch (error) {
+  cloudinaryInitError = error;
+  console.error('[gallery] Cloudinary init failed', error);
+}
 
-module.exports = async (req, res) => {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+module.exports = async function handler(req, res) {
+  console.log('[gallery] request start', { method: req?.method, url: req?.url });
 
   try {
+    if (req.method !== 'GET') {
+      return res.status(405).json({ error: 'Method not allowed', expectedMethod: 'GET' });
+    }
+
+    if (!cloudinary) {
+      return res.status(500).json({ error: 'Cloudinary failed to initialize', details: cloudinaryInitError?.message || 'Unknown initialization error' });
+    }
+
     const folder = 'nailit_gallery';
     const result = await cloudinary.search
       .expression(`folder:${folder} AND resource_type:image`)
@@ -32,8 +43,9 @@ module.exports = async (req, res) => {
       thumbnail: item.secure_url,
     }));
 
-    res.status(200).json({ images });
+    return res.status(200).json({ images });
   } catch (error) {
-    res.status(500).json({ error: error.message || 'Unable to load gallery' });
+    console.error('[gallery] catch', error);
+    return res.status(500).json({ error: error.message || 'Unable to load gallery' });
   }
 };
