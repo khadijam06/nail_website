@@ -195,6 +195,7 @@
     .gallery-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; max-width: 620px; margin: 0 auto; }
     .gal-item { border-radius: 16px; overflow: hidden; position: relative; aspect-ratio: 3 / 4; min-height: 0; border: 1px solid rgba(203,166,217,.2); }
     .gal-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gal-item.has-image { cursor: zoom-in; }
     .gal-item.focus-center img { object-fit: cover; object-position: 50% 46%; }
     .gal-item.focus-nails img { object-position: center 22%; }
     .gal-overlay { position: absolute; inset: 0; background: linear-gradient(transparent 50%,rgba(44,24,34,.55)); display: flex; align-items: flex-end; padding: 12px; }
@@ -204,6 +205,13 @@
     .gal-placeholder-mark { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,.88); color: var(--wine); border-radius: 999px; padding: 4px 10px; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
     .gallery-note { text-align: center; margin-top: 24px; }
     .gallery-note p { color: var(--mauve); margin-bottom: 14px; font-size: 14px; }
+
+    .gallery-lightbox { position: fixed; inset: 0; background: rgba(24,14,19,.78); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 500; display: none; align-items: center; justify-content: center; padding: 22px; }
+    .gallery-lightbox.open { display: flex; }
+    .gallery-lightbox-panel { position: relative; width: min(560px, 92vw); max-height: 90vh; }
+    .gallery-lightbox-img { width: 100%; max-height: 78vh; object-fit: contain; border-radius: 18px; display: block; background: rgba(255,255,255,.05); }
+    .gallery-lightbox-caption { margin-top: 10px; color: #fff; font-weight: 700; text-align: center; text-shadow: 0 1px 10px rgba(0,0,0,.55); }
+    .gallery-lightbox-close { position: absolute; top: -12px; right: -12px; width: 36px; height: 36px; border-radius: 999px; border: none; background: #fff; color: var(--wine); font-size: 24px; line-height: 1; cursor: pointer; box-shadow: 0 8px 18px rgba(0,0,0,.25); }
 
     /* ══ ORDER & PRICING ══ */
     .combined-order { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 28px; }
@@ -316,9 +324,8 @@
       .gallery-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; max-width: 720px; }
       .gal-item { border-radius: 20px; aspect-ratio: 3 / 4; min-height: 0; }
       .gal-item img { transition: transform .35s; }
-      .gal-item:hover img { transform: scale(1.04); }
-      .gal-overlay { opacity: 0; transition: opacity .3s; }
-      .gal-item:hover .gal-overlay { opacity: 1; }
+      .gal-item:hover img { transform: scale(1.03); }
+      .gal-overlay { opacity: 1; transition: opacity .2s; }
 
       .combined-order { flex-direction: row; text-align: left; gap: 60px; justify-content: space-between; }
       .co-right { align-items: flex-start; width: auto; }
@@ -393,6 +400,14 @@
         <button type="button" class="btn-secondary" onclick="clearBasket()">Clear</button>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="gallery-lightbox" id="galleryLightbox" aria-hidden="true">
+  <div class="gallery-lightbox-panel">
+    <button class="gallery-lightbox-close" type="button" aria-label="Close image" onclick="closeGalleryLightbox()">×</button>
+    <img id="galleryLightboxImage" class="gallery-lightbox-img" src="" alt="Expanded gallery image">
+    <p id="galleryLightboxCaption" class="gallery-lightbox-caption"></p>
   </div>
 </div>
 
@@ -729,6 +744,31 @@
     renderBasketList();
   }
 
+  function openGalleryLightbox(src, alt) {
+    const modal = document.getElementById('galleryLightbox');
+    const image = document.getElementById('galleryLightboxImage');
+    const caption = document.getElementById('galleryLightboxCaption');
+    if (!modal || !image || !caption || !src) return;
+
+    image.src = String(src);
+    image.alt = String(alt || 'Expanded gallery image');
+    caption.textContent = String(alt || 'Client photo');
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeGalleryLightbox() {
+    const modal = document.getElementById('galleryLightbox');
+    const image = document.getElementById('galleryLightboxImage');
+    if (!modal || !image) return;
+
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    image.src = '';
+    document.body.style.overflow = '';
+  }
+
   function escapeHtml(value) {
     return String(value || '')
       .replace(/&/g, '&amp;')
@@ -792,7 +832,7 @@
       const tileClass = `gal-item ${focusCenterClass} ${focusNailsClass}`.replace(/\s+/g, ' ').trim();
 
       return `
-        <div class="${tileClass} fade in d1">
+        <div class="${tileClass} has-image fade in d1">
           <img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.alt || img.title || 'Client photo')}">
           <div class="gal-overlay"><span>${escapeHtml(img.alt || img.title || 'Client photo')}</span></div>
         </div>
@@ -872,6 +912,26 @@
       setGalleryMessage('Gallery images could not be loaded right now. Please refresh the page in a moment.', true);
     }
   }
+
+  document.getElementById('galleryGrid')?.addEventListener('click', (event) => {
+    const card = event.target.closest('.gal-item.has-image');
+    if (!card) return;
+    const imgEl = card.querySelector('img');
+    if (!imgEl?.src) return;
+    openGalleryLightbox(imgEl.src, imgEl.alt || 'Client photo');
+  });
+
+  document.getElementById('galleryLightbox')?.addEventListener('click', (event) => {
+    if (event.target?.id === 'galleryLightbox') {
+      closeGalleryLightbox();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeGalleryLightbox();
+  });
+
+  window.closeGalleryLightbox = closeGalleryLightbox;
 </script>
 </body>
 </html>
