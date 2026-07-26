@@ -166,6 +166,27 @@
         <p class="muted" style="margin-bottom:10px;">These are uploaded images not attached to any saved product yet.</p>
         <div id="unassignedAssetsList"></div>
       </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h2>Gallery Manager</h2>
+          <button id="refreshGalleryBtn" class="btn btn-secondary">Refresh</button>
+        </div>
+        <p class="muted" style="margin-bottom:10px;">Manage up to 6 homepage collage images. These are separate from product/style images.</p>
+
+        <div class="grid" style="margin-bottom:10px;">
+          <div class="field">
+            <label for="galleryFilesInput">Upload Gallery Images (up to 6 total)</label>
+            <input id="galleryFilesInput" type="file" accept="image/*" multiple>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;">
+            <button id="uploadGalleryBtn" class="btn" type="button">Upload Selected</button>
+            <button id="saveGalleryBtn" class="btn btn-secondary" type="button">Save Order &amp; Alt Text</button>
+          </div>
+        </div>
+
+        <div id="galleryManagerList" class="img-list"></div>
+      </div>
     </div>
   </div>
 
@@ -174,6 +195,7 @@
       token: localStorage.getItem('adminToken') || '',
       products: [],
       unassignedAssets: [],
+      galleryImages: [],
       editingId: '',
       images: [],
       removeImagePublicIds: [],
@@ -276,6 +298,7 @@
       setStatus('Logged in successfully.', 'success');
       await loadProducts();
       await loadUnassignedAssets();
+      await loadGalleryManager();
       resetForm();
     }
 
@@ -675,14 +698,235 @@
       await loadUnassignedAssets();
     }
 
+    function galleryPlaceholder(slot) {
+      return {
+        slot,
+        publicId: '',
+        url: '',
+        alt: '',
+        isPlaceholder: true,
+      };
+    }
+
+    function buildGallerySlots(images) {
+      const slots = Array.from({ length: 6 }, (_, slot) => galleryPlaceholder(slot));
+      (images || []).forEach((image, index) => {
+        const target = Number.isInteger(Number(image.slot)) ? Number(image.slot) : index;
+        if (target < 0 || target >= 6) return;
+        slots[target] = {
+          slot: target,
+          publicId: image.publicId || '',
+          url: image.url || '',
+          alt: image.alt || '',
+          isPlaceholder: false,
+        };
+      });
+      return slots;
+    }
+
+    function renderGalleryManager() {
+      const list = document.getElementById('galleryManagerList');
+      if (!list) return;
+
+      const slots = buildGallerySlots(state.galleryImages);
+      list.innerHTML = slots.map((item, index) => {
+        const encodedPublicId = encodeURIComponent(item.publicId || '');
+        const preview = item.url
+          ? `<img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.alt || `Gallery image ${index + 1}`)}">`
+          : '<div style="width:52px;height:52px;border-radius:10px;background:#f5ecf9;display:flex;align-items:center;justify-content:center;font-size:11px;color:#7d5b7b;font-weight:700;">Empty</div>';
+
+        const controls = item.isPlaceholder
+          ? ''
+          : `
+              <button class="btn btn-secondary" type="button" onclick="moveGalleryImage(${index}, -1)">Up</button>
+              <button class="btn btn-secondary" type="button" onclick="moveGalleryImage(${index}, 1)">Down</button>
+              <button class="btn btn-danger" type="button" onclick="deleteGalleryImage('${encodedPublicId}')">Delete</button>
+            `;
+
+        return `
+          <div class="img-row">
+            ${preview}
+            <div>
+              <div style="font-weight:700;">Slot ${index + 1}</div>
+              <div class="small" style="word-break:break-all;">${escapeHtml(item.publicId || 'No image uploaded')}</div>
+              <div class="field" style="margin:8px 0 0;">
+                <label for="galleryAlt_${index}">Alt text</label>
+                <input id="galleryAlt_${index}" type="text" value="${escapeHtml(item.alt || '')}" placeholder="Describe this image" onchange="updateGalleryAlt(${index}, this.value)">
+              </div>
+              <div class="field" style="margin:8px 0 0;">
+                <label for="replaceGallery_${index}">Replace slot ${index + 1}</label>
+                <input id="replaceGallery_${index}" type="file" accept="image/*" onchange="replaceGalleryImage(${index}, this)">
+              </div>
+            </div>
+            <div class="img-controls">${controls}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadGalleryManager() {
+      const { res, data } = await requestJson('/api/admin/gallery', {
+        headers: authHeaders(),
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) logout();
+        setStatus(formatApiError(data, 'Failed to load gallery manager'), 'error');
+        return;
+      }
+
+      state.galleryImages = (data.images || [])
+        .map((img, index) => ({
+          publicId: img.publicId || '',
+          url: img.url || '',
+          alt: img.alt || '',
+          slot: Number.isInteger(Number(img.slot)) ? Number(img.slot) : index,
+        }))
+        .slice(0, 6)
+        .sort((a, b) => a.slot - b.slot)
+        .map((img, index) => ({ ...img, slot: index }));
+
+      renderGalleryManager();
+    }
+
+    function updateGalleryAlt(slotIndex, value) {
+      const image = state.galleryImages[slotIndex];
+      if (!image) return;
+      image.alt = String(value || '').trim();
+    }
+
+    function moveGalleryImage(slotIndex, delta) {
+      const target = slotIndex + delta;
+      if (target < 0 || target >= state.galleryImages.length) return;
+
+      const clone = [...state.galleryImages];
+      const temp = clone[slotIndex];
+      clone[slotIndex] = clone[target];
+      clone[target] = temp;
+      state.galleryImages = clone.map((img, index) => ({ ...img, slot: index }));
+      renderGalleryManager();
+    }
+
+    async function uploadSelectedGalleryImages() {
+      const input = document.getElementById('galleryFilesInput');
+      const files = input?.files ? Array.from(input.files) : [];
+      if (!files.length) {
+        setStatus('Select at least one gallery image to upload.', 'error');
+        return;
+      }
+
+      const available = 6 - state.galleryImages.length;
+      if (files.length > available) {
+        setStatus(`Only ${available} gallery slots are currently available.`, 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('mode', 'add');
+      files.forEach((file) => formData.append('photos', file));
+
+      const { res, data } = await requestJson('/api/admin/gallery', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: formData,
+      });
+
+      if (!res.ok) {
+        setStatus(formatApiError(data, 'Gallery upload failed'), 'error');
+        return;
+      }
+
+      if (input) input.value = '';
+      setStatus('Gallery images uploaded.', 'success');
+      await loadGalleryManager();
+    }
+
+    async function replaceGalleryImage(slotIndex, inputEl) {
+      const file = inputEl?.files?.[0];
+      if (!file) return;
+
+      const current = state.galleryImages[slotIndex] || null;
+      const alt = current?.alt || '';
+
+      const formData = new FormData();
+      formData.append('mode', 'replace');
+      formData.append('slot', String(slotIndex));
+      formData.append('alt', alt);
+      formData.append('photo', file);
+
+      const { res, data } = await requestJson('/api/admin/gallery', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: formData,
+      });
+
+      if (!res.ok) {
+        setStatus(formatApiError(data, 'Failed to replace gallery image'), 'error');
+        inputEl.value = '';
+        return;
+      }
+
+      setStatus(`Gallery slot ${slotIndex + 1} replaced.`, 'success');
+      inputEl.value = '';
+      await loadGalleryManager();
+    }
+
+    async function deleteGalleryImage(encodedPublicId) {
+      const publicId = decodeURIComponent(encodedPublicId || '');
+      if (!publicId) return;
+      if (!confirm('Delete this gallery image?')) return;
+
+      const { res, data } = await requestJson('/api/admin/gallery', {
+        method: 'DELETE',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ publicId }),
+      });
+
+      if (!res.ok) {
+        setStatus(formatApiError(data, 'Failed to delete gallery image'), 'error');
+        return;
+      }
+
+      setStatus('Gallery image deleted.', 'success');
+      await loadGalleryManager();
+    }
+
+    async function saveGalleryMeta() {
+      const items = state.galleryImages
+        .slice(0, 6)
+        .map((img, index) => ({
+          publicId: img.publicId,
+          slot: index,
+          alt: String(img.alt || '').trim(),
+        }))
+        .filter((img) => img.publicId);
+
+      const { res, data } = await requestJson('/api/admin/gallery', {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ items }),
+      });
+
+      if (!res.ok) {
+        setStatus(formatApiError(data, 'Failed to save gallery order and alt text'), 'error');
+        return;
+      }
+
+      setStatus('Gallery order and alt text saved.', 'success');
+      await loadGalleryManager();
+    }
+
     document.getElementById('loginBtn').addEventListener('click', login);
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('newProductBtn').addEventListener('click', resetForm);
     document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
     document.getElementById('refreshBtn').addEventListener('click', loadProducts);
     document.getElementById('refreshUnassignedBtn').addEventListener('click', loadUnassignedAssets);
+    document.getElementById('refreshGalleryBtn').addEventListener('click', loadGalleryManager);
     document.getElementById('applyFiltersBtn').addEventListener('click', loadProducts);
     document.getElementById('saveDraftBtn').addEventListener('click', () => saveProduct('draft'));
+    document.getElementById('uploadGalleryBtn').addEventListener('click', uploadSelectedGalleryImages);
+    document.getElementById('saveGalleryBtn').addEventListener('click', saveGalleryMeta);
 
     document.getElementById('productForm').addEventListener('submit', (event) => {
       event.preventDefault();
@@ -694,6 +938,7 @@
       setStatus('Loading products...', 'info');
       loadProducts();
       loadUnassignedAssets();
+      loadGalleryManager();
       resetForm();
     } else {
       showLogin();
@@ -707,6 +952,10 @@
     window.moveImage = moveImage;
     window.removeImageAt = removeImageAt;
     window.deleteUnassignedAsset = deleteUnassignedAsset;
+    window.updateGalleryAlt = updateGalleryAlt;
+    window.moveGalleryImage = moveGalleryImage;
+    window.replaceGalleryImage = replaceGalleryImage;
+    window.deleteGalleryImage = deleteGalleryImage;
   </script>
 </body>
 </html>

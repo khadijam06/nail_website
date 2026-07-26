@@ -1,6 +1,6 @@
 const { getCloudinaryState } = require('./lib/cloudinary-client');
 const { sendJson } = require('./lib/http');
-const { listProducts } = require('./lib/products');
+const { listGalleryImages, buildGallerySlots } = require('./lib/gallery');
 
 module.exports = async function handler(req, res) {
   console.log('[gallery] request start', {
@@ -32,27 +32,12 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const products = await listProducts(cloudinary);
-    const images = products
-      .filter((product) => product.status === 'published')
-      .flatMap((product) =>
-        (product.images || []).map((img) => ({
-          id: img.id,
-          publicId: img.publicId,
-          title: product.title,
-          category: product.category,
-          description: product.shortDescription,
-          price: product.price,
-          url: img.url,
-          thumbnail: img.url,
-          createdAt: product.createdAt,
-        })),
-      )
-      .slice(0, 80);
+    const images = await listGalleryImages(cloudinary);
 
     return sendJson(res, 200, {
       success: true,
       images,
+      slots: buildGallerySlots(images),
     });
   } catch (error) {
     console.error('[gallery] failed to load images', error);

@@ -192,12 +192,15 @@
     .why-card p { font-size: 13px; color: var(--mauve); line-height: 1.6; }
 
     /* ══ GALLERY ══ */
-    .gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .gal-item { border-radius: 16px; overflow: hidden; position: relative; height: 170px; }
-    .gal-item:first-child { grid-column: span 2; height: 230px; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; grid-auto-rows: 110px; }
+    .gal-item { border-radius: 16px; overflow: hidden; position: relative; min-height: 110px; border: 1px solid rgba(203,166,217,.2); }
+    .gal-item.span-2x2 { grid-column: span 2; grid-row: span 2; min-height: 230px; }
     .gal-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .gal-overlay { position: absolute; inset: 0; background: linear-gradient(transparent 50%,rgba(44,24,34,.55)); display: flex; align-items: flex-end; padding: 12px; }
     .gal-overlay span { color: white; font-weight: 700; font-size: 12px; }
+    .gal-item.placeholder { background: linear-gradient(145deg, rgba(229,143,201,.16), rgba(203,166,217,.22)); border-style: dashed; }
+    .gal-item.placeholder .gal-overlay { background: linear-gradient(transparent 40%, rgba(124,29,60,.4)); }
+    .gal-placeholder-mark { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,.88); color: var(--wine); border-radius: 999px; padding: 4px 10px; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
     .gallery-note { text-align: center; margin-top: 24px; }
     .gallery-note p { color: var(--mauve); margin-bottom: 14px; font-size: 14px; }
 
@@ -309,9 +312,9 @@
       .why-card:hover { transform: translateY(-4px); box-shadow: 0 14px 40px rgba(245,39,154,.09); }
       .why-card h3 { font-size: 19px; }
 
-      .gallery-grid { display: grid; grid-template-columns: repeat(4,1fr); grid-template-rows: repeat(2,210px); gap: 14px; }
-      .gal-item { height: auto; border-radius: 20px; }
-      .gal-item:first-child { grid-column: span 2; grid-row: span 2; height: auto; }
+      .gallery-grid { grid-template-columns: repeat(4,1fr); grid-auto-rows: 140px; gap: 14px; }
+      .gal-item { border-radius: 20px; min-height: 140px; }
+      .gal-item.span-2x2 { min-height: 294px; }
       .gal-item img { transition: transform .35s; }
       .gal-item:hover img { transform: scale(1.04); }
       .gal-overlay { opacity: 0; transition: opacity .3s; }
@@ -543,7 +546,7 @@
     <div class="s-head center fade">
       <div class="s-tag">The work</div>
       <h2>Fresh from K's hands.</h2>
-      <p class="s-sub">Every set is one-of-a-kind. Drop in your photos to fill this gallery — your clients will love it.</p>
+      <p class="s-sub">Every set is one-of-a-kind - here are some photos from our clients.</p>
     </div>
     <div id="galleryGrid" class="gallery-grid"></div>
     <div id="galleryMessage" class="gallery-note fade" style="display:none;">
@@ -752,36 +755,42 @@
     });
   }
 
-  function renderGalleryFromProducts(products) {
+  function renderGalleryFromSaved(images) {
     const grid = document.getElementById('galleryGrid');
     const message = document.getElementById('galleryMessage');
     if (!grid || !message) return;
 
-    const allImages = [];
-    (products || []).forEach((product) => {
-      const images = Array.isArray(product.images) ? product.images : [];
-      images.forEach((img) => {
-        if (img && img.url) {
-          allImages.push({
-            title: product.title || 'Nail set',
-            url: img.url,
-          });
-        }
-      });
-    });
+    const savedImages = Array.isArray(images)
+      ? [...images]
+        .sort((a, b) => Number(a.slot || 999) - Number(b.slot || 999))
+        .slice(0, 6)
+      : [];
 
-    if (!allImages.length) {
-      grid.innerHTML = '<p style="color:var(--mauve);grid-column:span 2;text-align:center;">No gallery items are published yet.</p>';
-      message.style.display = 'block';
-      return;
+    const slots = [];
+    for (let i = 0; i < 6; i += 1) {
+      slots.push(savedImages[i] || null);
     }
 
-    grid.innerHTML = allImages.slice(0, 6).map(img => `
-      <div class="gal-item fade d1">
-        <img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.title)}">
-        <div class="gal-overlay"><span>${escapeHtml(img.title)}</span></div>
-      </div>
-    `).join('');
+    const placeholderLabel = ['Main Feature', 'Slot 2', 'Slot 3', 'Slot 4', 'Slot 5', 'Slot 6'];
+    grid.innerHTML = slots.map((img, index) => {
+      const spanClass = index === 0 ? 'span-2x2' : '';
+      if (!img) {
+        return `
+          <div class="gal-item placeholder ${spanClass} fade d1">
+            <div class="gal-placeholder-mark">${placeholderLabel[index]}</div>
+            <div class="gal-overlay"><span>Upload a client photo</span></div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="gal-item ${spanClass} fade d1">
+          <img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.alt || img.title || 'Client photo')}">
+          <div class="gal-overlay"><span>${escapeHtml(img.alt || img.title || 'Client photo')}</span></div>
+        </div>
+      `;
+    }).join('');
+
     message.style.display = 'block';
   }
 
@@ -791,15 +800,21 @@
     if (!grid || !message) return;
 
     try {
-      const res = await fetch('/api/products?sort=newest');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Unable to load products');
+      const [productsRes, galleryRes] = await Promise.all([
+        fetch('/api/products?sort=newest'),
+        fetch('/api/gallery'),
+      ]);
+      const productsData = await productsRes.json();
+      const galleryData = await galleryRes.json();
 
-      applyCategoryCovers(data.categoryCovers || {});
-      renderGalleryFromProducts(data.products || []);
+      if (!productsRes.ok) throw new Error(productsData.error || 'Unable to load products');
+      if (!galleryRes.ok) throw new Error(galleryData.error || 'Unable to load gallery');
+
+      applyCategoryCovers(productsData.categoryCovers || {});
+      renderGalleryFromSaved(galleryData.images || []);
     } catch (error) {
       console.error(error);
-      grid.innerHTML = '<p style="color:var(--mauve);grid-column:span 2;text-align:center;">Unable to load gallery right now.</p>';
+      renderGalleryFromSaved([]);
       message.style.display = 'block';
     }
   }
