@@ -1,6 +1,6 @@
-const { getCloudinaryState } = require('./lib/cloudinary-client');
-const { sendJson } = require('./lib/http');
-const { listProducts, filterProducts, sortProducts, toPublicProduct, VALID_CATEGORIES } = require('./lib/products');
+const { getCloudinaryState } = require('../server/cloudinary-client');
+const { sendJson } = require('../server/http');
+const { listProducts, filterProducts, sortProducts, toPublicProduct, VALID_CATEGORIES } = require('../server/products');
 
 function validatePublicQuery(query) {
   const errors = [];

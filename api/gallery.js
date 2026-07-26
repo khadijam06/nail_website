@@ -1,6 +1,6 @@
-const { getCloudinaryState } = require('./lib/cloudinary-client');
-const { sendJson } = require('./lib/http');
-const { listGalleryImages, buildGallerySlots } = require('./lib/gallery');
+const { getCloudinaryState } = require('../server/cloudinary-client');
+const { sendJson } = require('../server/http');
+const { listGalleryImages, buildGallerySlots } = require('../server/gallery');
 
 module.exports = async function handler(req, res) {
   console.log('[gallery] request start', {
