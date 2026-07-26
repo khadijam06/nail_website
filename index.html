@@ -192,11 +192,10 @@
     .why-card p { font-size: 13px; color: var(--mauve); line-height: 1.6; }
 
     /* ══ GALLERY ══ */
-    .gallery-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; max-width: 780px; margin: 0 auto; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; max-width: 620px; margin: 0 auto; }
     .gal-item { border-radius: 16px; overflow: hidden; position: relative; aspect-ratio: 3 / 4; min-height: 0; border: 1px solid rgba(203,166,217,.2); }
     .gal-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .gal-item.focus-center { background: rgba(229,143,201,.08); }
-    .gal-item.focus-center img { object-fit: contain; object-position: center center; }
+    .gal-item.focus-center img { object-fit: cover; object-position: 50% 46%; }
     .gal-item.focus-nails img { object-position: center 22%; }
     .gal-overlay { position: absolute; inset: 0; background: linear-gradient(transparent 50%,rgba(44,24,34,.55)); display: flex; align-items: flex-end; padding: 12px; }
     .gal-overlay span { color: white; font-weight: 700; font-size: 12px; }
@@ -314,7 +313,7 @@
       .why-card:hover { transform: translateY(-4px); box-shadow: 0 14px 40px rgba(245,39,154,.09); }
       .why-card h3 { font-size: 19px; }
 
-      .gallery-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; max-width: 860px; }
+      .gallery-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; max-width: 720px; }
       .gal-item { border-radius: 20px; aspect-ratio: 3 / 4; min-height: 0; }
       .gal-item img { transition: transform .35s; }
       .gal-item:hover img { transform: scale(1.04); }
