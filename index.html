@@ -791,6 +791,51 @@
       `;
     }).join('');
 
+    // Gallery cards are injected after initial page load, so they must be
+    // observed explicitly to receive the fade-in class.
+    grid.querySelectorAll('.fade').forEach((el) => {
+      if (typeof io?.observe === 'function') {
+        io.observe(el);
+      } else {
+        el.classList.add('in');
+      }
+    });
+
+    message.style.display = 'block';
+  }
+
+  function readGalleryImagesFromPayload(galleryData) {
+    if (Array.isArray(galleryData?.images) && galleryData.images.length) {
+      return galleryData.images;
+    }
+
+    if (Array.isArray(galleryData?.slots) && galleryData.slots.length) {
+      return galleryData.slots
+        .map((slotEntry, index) => {
+          const image = slotEntry?.image;
+          if (!image) return null;
+          return {
+            ...image,
+            slot: Number.isInteger(Number(slotEntry.slot)) ? Number(slotEntry.slot) : index,
+          };
+        })
+        .filter(Boolean);
+    }
+
+    return [];
+  }
+
+  function setGalleryMessage(text, isError = false) {
+    const message = document.getElementById('galleryMessage');
+    if (!message) return;
+
+    const paragraph = message.querySelector('p');
+    if (paragraph) {
+      paragraph.textContent = text;
+      paragraph.style.color = isError ? 'var(--danger, #96253f)' : '';
+      paragraph.style.fontWeight = isError ? '700' : '';
+    }
+
     message.style.display = 'block';
   }
 
@@ -811,11 +856,12 @@
       if (!galleryRes.ok) throw new Error(galleryData.error || 'Unable to load gallery');
 
       applyCategoryCovers(productsData.categoryCovers || {});
-      renderGalleryFromSaved(galleryData.images || []);
+      renderGalleryFromSaved(readGalleryImagesFromPayload(galleryData));
+      setGalleryMessage('Follow @nail.it.qa on Instagram for the full gallery 💕');
     } catch (error) {
       console.error(error);
       renderGalleryFromSaved([]);
-      message.style.display = 'block';
+      setGalleryMessage('Gallery images could not be loaded right now. Please refresh the page in a moment.', true);
     }
   }
 </script>
