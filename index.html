@@ -776,7 +776,7 @@
       const spanClass = index === 0 ? 'span-2x2' : '';
       if (!img) {
         return `
-          <div class="gal-item placeholder ${spanClass} fade d1">
+          <div class="gal-item placeholder ${spanClass} fade in d1">
             <div class="gal-placeholder-mark">${placeholderLabel[index]}</div>
             <div class="gal-overlay"><span>Upload a client photo</span></div>
           </div>
@@ -784,7 +784,7 @@
       }
 
       return `
-        <div class="gal-item ${spanClass} fade d1">
+        <div class="gal-item ${spanClass} fade in d1">
           <img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.alt || img.title || 'Client photo')}">
           <div class="gal-overlay"><span>${escapeHtml(img.alt || img.title || 'Client photo')}</span></div>
         </div>
