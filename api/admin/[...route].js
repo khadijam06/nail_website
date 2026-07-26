@@ -38,8 +38,16 @@ function toErrorPayload(error, fallbackMessage, defaultCode) {
 function getRouteParts(req) {
   const raw = req?.query?.route;
   if (Array.isArray(raw)) return raw.map((item) => String(item || '').toLowerCase());
-  if (!raw) return [];
-  return [String(raw).toLowerCase()];
+  if (raw) return [String(raw).toLowerCase()];
+
+  const fromUrl = String(req?.url || '')
+    .split('?')[0]
+    .replace(/^\/api\/admin\/?/i, '')
+    .split('/')
+    .map((item) => String(item || '').trim().toLowerCase())
+    .filter(Boolean);
+
+  return fromUrl;
 }
 
 function stripRouteQuery(query = {}) {
