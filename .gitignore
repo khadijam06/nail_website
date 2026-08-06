@@ -1,1 +1,18 @@
 .git-credentials
+
+# Secrets / environment
+.env
+.env.*
+!.env.example
+
+# Vercel local state
+.vercel
+
+# Dependencies (already tracked historically on main — see note to user;
+# this stops *new/changed* node_modules files from being picked up going forward)
+node_modules/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.log

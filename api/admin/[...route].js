@@ -25,6 +25,17 @@ const {
   ensureValidSlot,
   sanitizeText,
 } = require('../../server/gallery');
+const {
+  SECTION_KEYS,
+  isValidSectionKey,
+  getSection,
+  saveDraftPatch,
+  publishSection,
+  listSectionsMeta,
+} = require('../../server/content-store');
+const { sanitizePatch } = require('../../server/content-validate');
+
+const ALLOWED_UPLOAD_FOLDERS = ['nailit_gallery', 'nailit_branding', 'nailit_content'];
 
 function toErrorPayload(error, fallbackMessage, defaultCode) {
   const nestedMessage = error?.error?.message || error?.cause?.message;
@@ -234,6 +245,8 @@ async function handleUpload(req, res, cloudinary) {
   const category = cleanText(fields.category, 80);
   const price = cleanText(fields.price, 64);
   const description = cleanText(fields.description, 500);
+  const requestedFolder = cleanText(fields.folder, 40);
+  const folder = ALLOWED_UPLOAD_FOLDERS.includes(requestedFolder) ? requestedFolder : 'nailit_gallery';
 
   const uploads = await Promise.all(uploadedFiles.map(async (uploadedFile) => {
     if (!uploadedFile?.filepath) {
@@ -243,7 +256,7 @@ async function handleUpload(req, res, cloudinary) {
     }
 
     return cloudinary.uploader.upload(uploadedFile.filepath, {
-      folder: 'nailit_gallery',
+      folder,
       resource_type: 'image',
       tags: ['nailit_unassigned'],
       context: getCloudinaryContextString({
@@ -366,6 +379,68 @@ async function handleGallery(req, res, cloudinary) {
   });
 }
 
+function requireSectionKey(query) {
+  const key = firstValue(query.key);
+  if (!isValidSectionKey(key)) {
+    const error = new Error(`Unknown content section "${key}"`);
+    error.code = 'INVALID_QUERY';
+    throw error;
+  }
+  return key;
+}
+
+async function handleContent(req, res, cloudinary) {
+  const query = stripRouteQuery(req.query || {});
+
+  if (req.method === 'GET') {
+    const key = requireSectionKey(query);
+    const status = firstValue(query.status) === 'published' ? 'published' : 'draft';
+    const section = await getSection(cloudinary, key, status);
+    return sendJson(res, 200, { success: true, key, status, section });
+  }
+
+  const body = await parseJsonBody(req);
+  if (!body || typeof body !== 'object') {
+    return sendJson(res, 400, { error: 'Request body must be valid JSON', code: 'INVALID_BODY' });
+  }
+
+  if (req.method === 'PATCH') {
+    const key = firstValue(body.key);
+    if (!isValidSectionKey(key)) {
+      return sendJson(res, 400, { error: `Unknown content section "${key}"`, code: 'INVALID_QUERY' });
+    }
+    const patch = sanitizePatch(body.patch);
+    const section = await saveDraftPatch(cloudinary, key, patch);
+    return sendJson(res, 200, { success: true, key, status: 'draft', section });
+  }
+
+  if (req.method === 'POST') {
+    const key = firstValue(body.key);
+    if (!isValidSectionKey(key)) {
+      return sendJson(res, 400, { error: `Unknown content section "${key}"`, code: 'INVALID_QUERY' });
+    }
+    if (body.action !== 'publish') {
+      return sendJson(res, 400, { error: 'Unsupported action', code: 'INVALID_ACTION', details: { allowedActions: ['publish'] } });
+    }
+    const section = await publishSection(cloudinary, key);
+    return sendJson(res, 200, { success: true, key, status: 'published', section });
+  }
+
+  return sendJson(res, 405, {
+    error: 'Method not allowed',
+    expectedMethods: ['GET', 'PATCH', 'POST'],
+  });
+}
+
+async function handleDashboard(req, res, cloudinary) {
+  if (req.method !== 'GET') {
+    return sendJson(res, 405, { error: 'Method not allowed', expectedMethod: 'GET' });
+  }
+
+  const sections = await listSectionsMeta(cloudinary);
+  return sendJson(res, 200, { success: true, sections, allSectionKeys: SECTION_KEYS });
+}
+
 module.exports = async function handler(req, res) {
   console.log('[admin-router] request start', {
     method: req?.method,
@@ -416,6 +491,14 @@ module.exports = async function handler(req, res) {
       return handleGallery(req, res, cloudinary);
     }
 
+    if (section === 'content') {
+      return handleContent(req, res, cloudinary);
+    }
+
+    if (section === 'dashboard') {
+      return handleDashboard(req, res, cloudinary);
+    }
+
     if (section === 'list') {
       const products = await listProducts(cloudinary);
       return sendJson(res, 200, { images: products.flatMap((p) => p.images || []) });
@@ -433,13 +516,15 @@ module.exports = async function handler(req, res) {
 
     return sendJson(res, 404, {
       error: 'Unknown admin route',
-      availableRoutes: ['login', 'products', 'upload', 'unassigned', 'gallery'],
+      availableRoutes: ['login', 'products', 'upload', 'unassigned', 'gallery', 'content', 'dashboard'],
     });
   } catch (error) {
     console.error('[admin-router] catch', error);
-    const statusCode = ['VALIDATION_ERROR', 'INVALID_REMOVE_IMAGES', 'MISSING_EXISTING_IMAGES', 'NOT_FOUND', 'INVALID_QUERY', 'INVALID_BODY'].includes(error?.code)
-      ? 400
-      : 500;
+    const statusCode = error?.code === 'NOT_FOUND'
+      ? 404
+      : ['VALIDATION_ERROR', 'INVALID_REMOVE_IMAGES', 'MISSING_EXISTING_IMAGES', 'INVALID_QUERY', 'INVALID_BODY'].includes(error?.code)
+        ? 400
+        : 500;
 
     return sendJson(res, statusCode, toErrorPayload(error, 'Admin operation failed', 'ADMIN_OPERATION_FAILED'));
   }

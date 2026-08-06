@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nail it by K — Custom Gel Press-ons · Qatar</title>
+  <title id="pageTitle">Nail it by K — Custom Gel Press-ons · Qatar</title>
+  <link rel="icon" id="faviconLink" href="brand_assets/nail logo.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pridi:wght@300;400;600&family=Mulish:wght@400;700;900&display=swap" rel="stylesheet">
@@ -350,10 +351,10 @@
 <!-- NAV -->
 <nav id="nav">
   <a href="#" class="nav-logo">
-    <img src="brand_assets/nail logo.jpg" alt="Nail it by K logo">
-    <span class="nav-logo-text">Nail it<br>by K</span>
+    <img src="brand_assets/nail logo.jpg" alt="Nail it by K logo" id="navLogoImg">
+    <span class="nav-logo-text" id="navLogoText">Nail it<br>by K</span>
   </a>
-  <ul class="nav-links">
+  <ul class="nav-links" id="navLinksList">
     <li><a href="#how">How it Works</a></li>
     <li><a href="#styles">Styles</a></li>
     <li><a href="#gallery">Gallery</a></li>
@@ -361,7 +362,7 @@
     <li><a href="#faq">FAQ</a></li>
   </ul>
   <div class="nav-actions">
-    <a href="order.html" class="btn-primary nav-cta">Order Now 💅</a>
+    <a href="order.html" class="btn-primary nav-cta" id="navCta">Order Now 💅</a>
     <button id="basketToggle" class="btn-basket" type="button" aria-label="Open basket">
       🛒 <span id="basketCount">0</span>
     </button>
@@ -374,12 +375,14 @@
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mob">
   <button class="mobile-close" id="mobClose">×</button>
-  <a href="#how" onclick="closeMob()">How it Works</a>
-  <a href="#styles" onclick="closeMob()">Styles</a>
-  <a href="#gallery" onclick="closeMob()">Gallery</a>
-  <a href="#pricing" onclick="closeMob()">Orders &amp; Pricing</a>
-  <a href="#faq" onclick="closeMob()">FAQ</a>
-  <a href="order.html" onclick="closeMob()" class="btn-primary" style="margin-top:8px">Order Now 💅</a>
+  <div id="mobLinksList">
+    <a href="#how" onclick="closeMob()">How it Works</a>
+    <a href="#styles" onclick="closeMob()">Styles</a>
+    <a href="#gallery" onclick="closeMob()">Gallery</a>
+    <a href="#pricing" onclick="closeMob()">Orders &amp; Pricing</a>
+    <a href="#faq" onclick="closeMob()">FAQ</a>
+  </div>
+  <a href="order.html" onclick="closeMob()" class="btn-primary" id="mobCta" style="margin-top:8px">Order Now 💅</a>
 </div>
 
 <div class="basket-modal" id="basketModal" aria-hidden="true">
@@ -420,16 +423,16 @@
     <div class="hero-inner">
       <div>
         <div class="hero-logo-mob">
-          <img src="brand_assets/nail logo.jpg" alt="Nail it by K">
+          <img src="brand_assets/nail logo.jpg" alt="Nail it by K" id="heroLogoMobImg">
         </div>
-        <div class="hero-pill">✦ <span>Now taking orders</span> · Doha, Qatar</div>
-        <h1>You dream it,<br><em>we nail it.</em></h1>
-        <p class="hero-sub">Custom gel press-on sets, hand-made to match your inspo and delivered to your door across Qatar. No salon chair. No waiting. Just perfect nails.</p>
+        <div class="hero-pill">✦ <span id="heroPillText">Now taking orders</span> · <span id="heroPillLocation">Doha, Qatar</span></div>
+        <h1><span id="heroHeadingLine1">You dream it,</span><br><em id="heroHeadingEmphasis">we nail it.</em></h1>
+        <p class="hero-sub" id="heroDescription">Custom gel press-on sets, hand-made to match your inspo and delivered to your door across Qatar. No salon chair. No waiting. Just perfect nails.</p>
         <div class="hero-btns">
-          <a href="order.html" class="btn-primary">Place An Order 💅</a>
-          <a href="#how" class="btn-outline">See How it Works</a>
+          <a href="order.html" class="btn-primary" id="heroPrimaryBtn">Place An Order 💅</a>
+          <a href="#how" class="btn-outline" id="heroSecondaryBtn">See How it Works</a>
         </div>
-        <div class="hero-stats">
+        <div class="hero-stats" id="heroStats">
           <div><div class="stat-num">100%</div><div class="stat-lbl">Hand-made</div></div>
           <div><div class="stat-num">Qatar</div><div class="stat-lbl">Wide Delivery</div></div>
           <div><div class="stat-num">Any</div><div class="stat-lbl">Design, Any Style</div></div>
@@ -437,7 +440,7 @@
       </div>
       <div class="hero-visual">
         <div class="logo-card">
-          <img src="brand_assets/nail logo.jpg" alt="Nail it by K">
+          <img src="brand_assets/nail logo.jpg" alt="Nail it by K" id="heroLogoCardImg">
         </div>
         <div class="badge badge-1">
           <div class="badge-icon">💅</div>
@@ -454,7 +457,7 @@
 
 <!-- MARQUEE -->
 <div class="marquee-bar">
-  <div class="marquee-track">
+  <div class="marquee-track" id="marqueeTrack">
     <span class="m-item"><span class="m-dot"></span>Chrome Nails</span>
     <span class="m-item"><span class="m-dot"></span>French Tips</span>
     <span class="m-item"><span class="m-dot"></span>3D Charms</span>
@@ -482,11 +485,11 @@
 <section id="how">
   <div class="container">
     <div class="s-head center fade">
-      <div class="s-tag">The process</div>
-      <h2>Simple as 1, 2, 3.</h2>
-      <p class="s-sub">No appointments, no waiting rooms. Just send your inspo and we handle everything.</p>
+      <div class="s-tag" id="howTag">The process</div>
+      <h2 id="howHeading">Simple as 1, 2, 3.</h2>
+      <p class="s-sub" id="howSub">No appointments, no waiting rooms. Just send your inspo and we handle everything.</p>
     </div>
-    <div class="steps">
+    <div class="steps" id="howSteps">
       <div class="step fade d1">
         <div class="step-n">01</div>
         <div class="step-emoji">📸</div>
@@ -513,26 +516,26 @@
 <section id="styles" style="background:white">
   <div class="container">
     <div class="s-head fade">
-      <div class="s-tag">What we do</div>
-      <h2>Any style.<br>Made for you.</h2>
-      <p class="s-sub">From everyday classics to statement sets — if you can dream it, we can nail it.</p>
+      <div class="s-tag" id="stylesTag">What we do</div>
+      <h2 id="stylesHeading">Any style.<br>Made for you.</h2>
+      <p class="s-sub" id="stylesSub">From everyday classics to statement sets — if you can dream it, we can nail it.</p>
     </div>
-    <div class="styles-grid">
+    <div class="styles-grid" id="stylesGrid">
       <a href="styles-chrome.html" class="style-card fade d1" data-cover-category="Chrome">
         <img src="brand_assets/style-cards/chrome.jpg" alt="Chrome style preview" data-cover-image="Chrome">
-        <div class="style-info"><h3>Chrome</h3><p>Reflective, ultra-glossy finish</p></div>
+        <div class="style-info"><h3 data-style-title="Chrome">Chrome</h3><p data-style-subtitle="Chrome">Reflective, ultra-glossy finish</p></div>
       </a>
       <a href="styles-french-tips.html" class="style-card fade d2" data-cover-category="French Tips">
         <img src="brand_assets/style-cards/french-tips.jpg" alt="French Tips style preview" data-cover-image="French Tips">
-        <div class="style-info"><h3>French Tips</h3><p>Classic clean lines, your way</p></div>
+        <div class="style-info"><h3 data-style-title="French Tips">French Tips</h3><p data-style-subtitle="French Tips">Classic clean lines, your way</p></div>
       </a>
       <a href="styles-cateye.html" class="style-card fade d3" data-cover-category="Cateye">
         <img src="brand_assets/style-cards/cateye.jpg" alt="Cateye style preview" data-cover-image="Cateye">
-        <div class="style-info"><h3>Cateye</h3><p>Sculpted curves with a luxe finish</p></div>
+        <div class="style-info"><h3 data-style-title="Cateye">Cateye</h3><p data-style-subtitle="Cateye">Sculpted curves with a luxe finish</p></div>
       </a>
       <a href="styles-3d-art.html" class="style-card fade d1" data-cover-category="3D Art">
         <img src="brand_assets/style-cards/3d-art.jpg" alt="3D Art style preview" data-cover-image="3D Art">
-        <div class="style-info"><h3>3D Art</h3><p>Gems, charms &amp; dimensional detail</p></div>
+        <div class="style-info"><h3 data-style-title="3D Art">3D Art</h3><p data-style-subtitle="3D Art">Gems, charms &amp; dimensional detail</p></div>
       </a>
     </div>
   </div>
@@ -542,11 +545,11 @@
 <section id="about">
   <div class="container">
     <div class="s-head fade">
-      <div class="s-tag">Why Nail it by K</div>
-      <h2>Salon-worthy nails,<br>on your schedule.</h2>
-      <p class="s-sub">We do things differently — and your nails will show it.</p>
+      <div class="s-tag" id="whyUsTag">Why Nail it by K</div>
+      <h2 id="whyUsHeading">Salon-worthy nails,<br>on your schedule.</h2>
+      <p class="s-sub" id="whyUsSub">We do things differently — and your nails will show it.</p>
     </div>
-    <div class="why-grid">
+    <div class="why-grid" id="whyUsGrid">
       <div class="why-card fade d1"><div class="why-ico wi1">🎨</div><div><h3>Soft &amp; sweet</h3><p>Pretty pinks, a warm and caring approach. Every set starts with your vision and ends with something better than you imagined.</p></div></div>
       <div class="why-card fade d2"><div class="why-ico wi2">🔥</div><div><h3>Bold &amp; trendy</h3><p>On top of every trend — chrome, French, jelly, 3D charms. Confident, never shy about going bold.</p></div></div>
       <div class="why-card fade d3"><div class="why-ico wi3">💝</div><div><h3>Made for you</h3><p>Every single set is personal. We speak to you one-to-one, like a friend with great taste who just happens to be excellent with nails.</p></div></div>
@@ -559,9 +562,9 @@
 <section id="gallery" style="background:white">
   <div class="container">
     <div class="s-head center fade">
-      <div class="s-tag">The work</div>
-      <h2>Fresh from K's hands.</h2>
-      <p class="s-sub">Every set is one-of-a-kind - here are some photos from our clients.</p>
+      <div class="s-tag" id="galleryTag">The work</div>
+      <h2 id="galleryHeading">Fresh from K's hands.</h2>
+      <p class="s-sub" id="gallerySub">Every set is one-of-a-kind - here are some photos from our clients.</p>
     </div>
     <div id="galleryGrid" class="gallery-grid"></div>
     <div id="galleryMessage" class="gallery-note fade" style="display:none;">
@@ -578,16 +581,16 @@
   <div class="container">
     <div class="combined-order fade">
       <div class="co-left">
-        <div class="co-tag">✦ Now taking orders</div>
-        <h2 style="color:white;margin-bottom:14px;">Every set is priced<br>just for you.</h2>
-        <p style="color:rgba(255,255,255,.82);font-size:16px;line-height:1.7;max-width:460px;">Pricing depends on your design, shape, and level of detail — so we keep it personal. DM us with your inspo and we'll send you a quote. No commitment needed.</p>
+        <div class="co-tag" id="orderCtaTag">✦ Now taking orders</div>
+        <h2 style="color:white;margin-bottom:14px;" id="orderCtaHeading">Every set is priced<br>just for you.</h2>
+        <p style="color:rgba(255,255,255,.82);font-size:16px;line-height:1.7;max-width:460px;" id="orderCtaDescription">Pricing depends on your design, shape, and level of detail — so we keep it personal. DM us with your inspo and we'll send you a quote. No commitment needed.</p>
       </div>
       <div class="co-right">
-        <div class="co-pill">💬 It's as easy as sending a message</div>
-        <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="btn-white" style="font-size:15px;padding:15px 36px">DM for Orders &amp; Prices 💌</a>
-        <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="co-ig">
+        <div class="co-pill" id="orderCtaPill">💬 It's as easy as sending a message</div>
+        <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="btn-white" id="orderCtaPrimaryBtn" style="font-size:15px;padding:15px 36px">DM for Orders &amp; Prices 💌</a>
+        <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="co-ig" id="orderCtaSecondaryLink">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-          @nail.it.qa
+          <span id="orderCtaSecondaryLinkText">@nail.it.qa</span>
         </a>
       </div>
     </div>
@@ -598,11 +601,11 @@
 <section id="faq">
   <div class="container">
     <div class="s-head center fade">
-      <div class="s-tag">Questions</div>
-      <h2>Good questions.<br>Easy answers.</h2>
-      <p class="s-sub">Everything you need to know before you order.</p>
+      <div class="s-tag" id="faqTag">Questions</div>
+      <h2 id="faqHeading">Good questions.<br>Easy answers.</h2>
+      <p class="s-sub" id="faqSub">Everything you need to know before you order.</p>
     </div>
-    <div class="faq-grid">
+    <div class="faq-grid" id="faqGrid">
       <div class="faq-item fade d1"><div class="faq-q" onclick="toggleFaq(this)">How do I order?<div class="faq-ico">+</div></div><div class="faq-a">DM us on Instagram @nail.it.qa with your inspo photos. We'll confirm your order, discuss sizing, and handle everything from there.</div></div>
       <div class="faq-item fade d2"><div class="faq-q" onclick="toggleFaq(this)">How long does it take?<div class="faq-ico">+</div></div><div class="faq-a">Turnaround time depends on the complexity of the design. We'll give you an estimated timeframe when you place your order — simple sets are always quicker!</div></div>
       <div class="faq-item fade d3"><div class="faq-q" onclick="toggleFaq(this)">Do you deliver across all of Qatar?<div class="faq-ico">+</div></div><div class="faq-a">Yes! We deliver across Qatar. Delivery is included in all set prices. DM us for details on timings and your specific area.</div></div>
@@ -621,12 +624,12 @@
     <div class="foot-top">
       <div class="foot-brand">
         <a href="#" class="foot-logo">
-          <img src="brand_assets/nail logo.jpg" alt="Nail it by K">
-          <span class="foot-logo-t">Nail it<br>by K</span>
+          <img src="brand_assets/nail logo.jpg" alt="Nail it by K" id="footLogoImg">
+          <span class="foot-logo-t" id="footLogoText">Nail it<br>by K</span>
         </a>
-        <p class="foot-tag">Custom gel press-on nails, hand-made to match your inspo and delivered to your door across Qatar.</p>
+        <p class="foot-tag" id="footTagline">Custom gel press-on nails, hand-made to match your inspo and delivered to your door across Qatar.</p>
         <div class="foot-socials">
-          <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="foot-soc" aria-label="Instagram">
+          <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="foot-soc" aria-label="Instagram" id="footInstagramLink">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
           </a>
         </div>
@@ -634,7 +637,7 @@
       <div class="foot-cols">
         <div>
           <div class="foot-col-t">Navigate</div>
-          <ul class="foot-links">
+          <ul class="foot-links" id="footNavigateLinks">
             <li><a href="#how">How it Works</a></li>
             <li><a href="#styles">Styles</a></li>
             <li><a href="#gallery">Gallery</a></li>
@@ -645,7 +648,7 @@
         </div>
         <div>
           <div class="foot-col-t">Get in Touch</div>
-          <ul class="foot-links">
+          <ul class="foot-links" id="footContactLinks">
             <li><a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener">@nail.it.qa</a></li>
             <li><a href="#pricing">DM to Order</a></li>
             <li><a href="#about">About Us</a></li>
@@ -656,8 +659,8 @@
     </div>
     <div class="foot-div"></div>
     <div class="foot-bot">
-      <p class="foot-copy">© 2026 <span>Nail it by K</span> · All rights reserved · Doha, Qatar</p>
-      <p class="foot-heart">Made with <span style="color:var(--bubblegum);margin:0 2px">♥</span> in Qatar</p>
+      <p class="foot-copy" id="footCopyright">© 2026 <span>Nail it by K</span> · All rights reserved · Doha, Qatar</p>
+      <p class="foot-heart" id="footMadeWith">Made with <span style="color:var(--bubblegum);margin:0 2px">♥</span> in Qatar</p>
     </div>
   </div>
 </footer>
@@ -778,6 +781,239 @@
       .replace(/'/g, '&#39;');
   }
 
+  // ── CMS content hydration ──
+  // Every function below overwrites specific elements with content fetched
+  // from /api/content. If a field is missing/empty, the existing hardcoded
+  // text stays put — that hardcoded markup is the fallback for a failed or
+  // not-yet-migrated fetch, not dead code.
+  function textOrKeep(el, value) {
+    if (el && typeof value === 'string' && value.trim()) el.textContent = value;
+  }
+
+  function hrefOrKeep(el, value) {
+    if (el && typeof value === 'string' && value.trim()) el.setAttribute('href', value);
+  }
+
+  function applyHeadingLines(el, value) {
+    if (!el || !value) return;
+    el.innerHTML = String(value).split('\n').map(escapeHtml).join('<br>');
+  }
+
+  function applyBranding(branding) {
+    if (!branding) return;
+    if (branding.siteTitle) {
+      document.title = branding.siteTitle;
+      textOrKeep(document.getElementById('pageTitle'), branding.siteTitle);
+    }
+    const favicon = document.getElementById('faviconLink');
+    if (favicon && branding.logos?.favicon?.url) favicon.setAttribute('href', branding.logos.favicon.url);
+
+    const mainUrl = branding.logos?.main?.url;
+    const mobileUrl = branding.logos?.mobile?.url || mainUrl;
+    const footerUrl = branding.logos?.footer?.url || mainUrl;
+
+    if (mainUrl) {
+      const navImg = document.getElementById('navLogoImg');
+      const cardImg = document.getElementById('heroLogoCardImg');
+      if (navImg) navImg.src = mainUrl;
+      if (cardImg) cardImg.src = mainUrl;
+    }
+    if (mobileUrl) {
+      const mobImg = document.getElementById('heroLogoMobImg');
+      if (mobImg) mobImg.src = mobileUrl;
+    }
+    if (footerUrl) {
+      const footImg = document.getElementById('footLogoImg');
+      if (footImg) footImg.src = footerUrl;
+    }
+  }
+
+  function applyNavigation(nav) {
+    if (!nav) return;
+    if (nav.logoLine1 || nav.logoLine2) {
+      const logoHtml = `${escapeHtml(nav.logoLine1 || 'Nail it')}<br>${escapeHtml(nav.logoLine2 || 'by K')}`;
+      const navLogoText = document.getElementById('navLogoText');
+      const footLogoText = document.getElementById('footLogoText');
+      if (navLogoText) navLogoText.innerHTML = logoHtml;
+      if (footLogoText) footLogoText.innerHTML = logoHtml;
+    }
+
+    const items = Array.isArray(nav.items) ? nav.items.filter((item) => item.visible !== false) : null;
+    if (items) {
+      const navLinksList = document.getElementById('navLinksList');
+      if (navLinksList) {
+        navLinksList.innerHTML = items.map((item) => `<li><a href="${escapeHtml(item.href || '#')}">${escapeHtml(item.label || '')}</a></li>`).join('');
+      }
+      const mobLinksList = document.getElementById('mobLinksList');
+      if (mobLinksList) {
+        mobLinksList.innerHTML = items.map((item) => `<a href="${escapeHtml(item.href || '#')}" onclick="closeMob()">${escapeHtml(item.label || '')}</a>`).join('');
+      }
+    }
+
+    if (nav.cta) {
+      [document.getElementById('navCta'), document.getElementById('mobCta')].forEach((btn) => {
+        if (!btn) return;
+        if (nav.cta.label) btn.textContent = nav.cta.label;
+        if (nav.cta.href) btn.setAttribute('href', nav.cta.href);
+      });
+    }
+  }
+
+  function applyFooter(footer) {
+    if (!footer) return;
+    textOrKeep(document.getElementById('footTagline'), footer.tagline);
+    hrefOrKeep(document.getElementById('footInstagramLink'), footer.instagramUrl);
+    textOrKeep(document.getElementById('footCopyright'), footer.copyrightText);
+    textOrKeep(document.getElementById('footMadeWith'), footer.madeWithText);
+
+    const linkListHtml = (links) => links.map((link) => {
+      const href = link.href || '#';
+      const external = /^https?:/i.test(href);
+      return `<li><a href="${escapeHtml(href)}"${external ? ' target="_blank" rel="noopener"' : ''}>${escapeHtml(link.label || '')}</a></li>`;
+    }).join('');
+
+    const navigateEl = document.getElementById('footNavigateLinks');
+    if (navigateEl && Array.isArray(footer.navigateLinks) && footer.navigateLinks.length) {
+      navigateEl.innerHTML = linkListHtml(footer.navigateLinks);
+    }
+    const contactEl = document.getElementById('footContactLinks');
+    if (contactEl && Array.isArray(footer.contactLinks) && footer.contactLinks.length) {
+      contactEl.innerHTML = linkListHtml(footer.contactLinks);
+    }
+  }
+
+  function applyFaq(faq) {
+    if (!faq) return;
+    textOrKeep(document.getElementById('faqTag'), faq.tag);
+    applyHeadingLines(document.getElementById('faqHeading'), faq.heading);
+    textOrKeep(document.getElementById('faqSub'), faq.sub);
+
+    const grid = document.getElementById('faqGrid');
+    const items = Array.isArray(faq.items) ? faq.items.filter((item) => item.visible !== false) : null;
+    if (grid && items && items.length) {
+      grid.innerHTML = items.map((item, index) => `
+        <div class="faq-item fade in d${(index % 4) + 1}">
+          <div class="faq-q" onclick="toggleFaq(this)">${escapeHtml(item.question || '')}<div class="faq-ico">+</div></div>
+          <div class="faq-a">${escapeHtml(item.answer || '')}</div>
+        </div>
+      `).join('');
+    }
+  }
+
+  function applyHero(hero) {
+    if (!hero) return;
+    textOrKeep(document.getElementById('heroPillText'), hero.pillText);
+    textOrKeep(document.getElementById('heroPillLocation'), hero.pillLocation);
+    textOrKeep(document.getElementById('heroHeadingLine1'), hero.headingLine1);
+    textOrKeep(document.getElementById('heroHeadingEmphasis'), hero.headingEmphasis);
+    textOrKeep(document.getElementById('heroDescription'), hero.description);
+
+    [['heroPrimaryBtn', hero.primaryButton], ['heroSecondaryBtn', hero.secondaryButton]].forEach(([id, btnData]) => {
+      const btn = document.getElementById(id);
+      if (!btn || !btnData) return;
+      if (btnData.label) btn.textContent = btnData.label;
+      if (btnData.href) btn.setAttribute('href', btnData.href);
+    });
+
+    const statsEl = document.getElementById('heroStats');
+    if (statsEl && Array.isArray(hero.stats) && hero.stats.length) {
+      statsEl.innerHTML = hero.stats.map((stat) => `<div><div class="stat-num">${escapeHtml(stat.value || '')}</div><div class="stat-lbl">${escapeHtml(stat.label || '')}</div></div>`).join('');
+    }
+  }
+
+  function applyHowItWorks(section) {
+    if (!section) return;
+    textOrKeep(document.getElementById('howTag'), section.tag);
+    applyHeadingLines(document.getElementById('howHeading'), section.heading);
+    textOrKeep(document.getElementById('howSub'), section.sub);
+
+    const stepsEl = document.getElementById('howSteps');
+    if (stepsEl && Array.isArray(section.steps) && section.steps.length) {
+      stepsEl.innerHTML = section.steps.map((step, index) => `
+        <div class="step fade in d${(index % 4) + 1}">
+          <div class="step-n">${String(index + 1).padStart(2, '0')}</div>
+          <div class="step-emoji">${escapeHtml(step.icon || '')}</div>
+          <h3>${escapeHtml(step.title || '')}</h3>
+          <p>${escapeHtml(step.text || '')}</p>
+        </div>
+      `).join('');
+    }
+  }
+
+  function applyStylesSection(section) {
+    if (!section) return;
+    textOrKeep(document.getElementById('stylesTag'), section.tag);
+    applyHeadingLines(document.getElementById('stylesHeading'), section.heading);
+    textOrKeep(document.getElementById('stylesSub'), section.sub);
+
+    if (Array.isArray(section.cards)) {
+      section.cards.forEach((card) => {
+        if (!card.category) return;
+        const titleEl = document.querySelector(`[data-style-title="${CSS.escape(card.category)}"]`);
+        const subtitleEl = document.querySelector(`[data-style-subtitle="${CSS.escape(card.category)}"]`);
+        const linkEl = document.querySelector(`[data-cover-category="${CSS.escape(card.category)}"]`);
+        if (titleEl && card.title) titleEl.textContent = card.title;
+        if (subtitleEl && card.subtitle) subtitleEl.textContent = card.subtitle;
+        if (linkEl && card.href) linkEl.setAttribute('href', card.href);
+      });
+    }
+  }
+
+  function applyWhyUs(section) {
+    if (!section) return;
+    textOrKeep(document.getElementById('whyUsTag'), section.tag);
+    applyHeadingLines(document.getElementById('whyUsHeading'), section.heading);
+    textOrKeep(document.getElementById('whyUsSub'), section.sub);
+
+    const gridEl = document.getElementById('whyUsGrid');
+    if (gridEl && Array.isArray(section.cards) && section.cards.length) {
+      gridEl.innerHTML = section.cards.map((card, index) => `
+        <div class="why-card fade in d${(index % 4) + 1}"><div class="why-ico wi${(index % 4) + 1}">${escapeHtml(card.icon || '')}</div><div><h3>${escapeHtml(card.title || '')}</h3><p>${escapeHtml(card.text || '')}</p></div></div>
+      `).join('');
+    }
+  }
+
+  function applyGallerySectionText(section) {
+    if (!section) return;
+    textOrKeep(document.getElementById('galleryTag'), section.tag);
+    applyHeadingLines(document.getElementById('galleryHeading'), section.heading);
+    textOrKeep(document.getElementById('gallerySub'), section.sub);
+  }
+
+  function applyOrderCta(section) {
+    if (!section) return;
+    textOrKeep(document.getElementById('orderCtaTag'), section.tag);
+    applyHeadingLines(document.getElementById('orderCtaHeading'), section.heading);
+    textOrKeep(document.getElementById('orderCtaDescription'), section.description);
+    textOrKeep(document.getElementById('orderCtaPill'), section.pillText);
+
+    const primaryBtn = document.getElementById('orderCtaPrimaryBtn');
+    if (primaryBtn && section.primaryButton) {
+      if (section.primaryButton.label) primaryBtn.textContent = section.primaryButton.label;
+      if (section.primaryButton.href) primaryBtn.setAttribute('href', section.primaryButton.href);
+    }
+    const secondaryLink = document.getElementById('orderCtaSecondaryLink');
+    const secondaryLinkText = document.getElementById('orderCtaSecondaryLinkText');
+    if (section.secondaryLink) {
+      textOrKeep(secondaryLinkText, section.secondaryLink.label);
+      if (secondaryLink && section.secondaryLink.href) secondaryLink.setAttribute('href', section.secondaryLink.href);
+    }
+  }
+
+  function applyMarquee(marquee) {
+    const track = document.getElementById('marqueeTrack');
+    if (!track || !marquee || !Array.isArray(marquee.items) || !marquee.items.length) return;
+    const itemHtml = marquee.items.map((word) => `<span class="m-item"><span class="m-dot"></span>${escapeHtml(word)}</span>`).join('');
+    track.innerHTML = itemHtml + itemHtml;
+  }
+
+  function showPreviewBanner() {
+    const banner = document.createElement('div');
+    banner.textContent = 'Preview mode — showing unpublished draft content. Not visible to site visitors.';
+    banner.style.cssText = 'position:sticky;top:0;z-index:2000;background:#3b1b35;color:#fff;text-align:center;padding:8px 12px;font-weight:700;font-size:13px;';
+    document.body.prepend(banner);
+  }
+
   document.getElementById('basketToggle').onclick = openBasketModal;
   document.addEventListener('DOMContentLoaded', () => {
     updateBasketCount();
@@ -892,10 +1128,20 @@
     const message = document.getElementById('galleryMessage');
     if (!grid || !message) return;
 
+    const params = new URLSearchParams(window.location.search);
+    const isPreview = params.get('preview') === '1';
+    const previewToken = params.get('token') || '';
+
+    let contentUrl = '/api/content?page=homepage,navigation,footer,faq,branding';
+    if (isPreview && previewToken) {
+      contentUrl += `&status=draft&previewToken=${encodeURIComponent(previewToken)}`;
+    }
+
     try {
-      const [productsRes, galleryRes] = await Promise.all([
+      const [productsRes, galleryRes, contentRes] = await Promise.all([
         fetch('/api/products?sort=newest'),
         fetch('/api/gallery'),
+        fetch(contentUrl),
       ]);
       const productsData = await productsRes.json();
       const galleryData = await galleryRes.json();
@@ -906,6 +1152,26 @@
       applyCategoryCovers(productsData.categoryCovers || {});
       renderGalleryFromSaved(readGalleryImagesFromPayload(galleryData));
       setGalleryMessage('Follow @nail.it.qa on Instagram for the full gallery 💕');
+
+      if (contentRes.ok) {
+        const contentData = await contentRes.json();
+        const sections = contentData?.sections || {};
+        applyBranding(sections.branding?.data);
+        applyNavigation(sections.navigation?.data);
+        applyFooter(sections.footer?.data);
+        applyFaq(sections.faq?.data);
+
+        const home = sections.homepage?.data || {};
+        applyHero(home.hero);
+        applyHowItWorks(home.howItWorks);
+        applyStylesSection(home.stylesSection);
+        applyWhyUs(home.whyUs);
+        applyGallerySectionText(home.gallerySection);
+        applyOrderCta(home.orderCta);
+        applyMarquee(home.marquee);
+      }
+
+      if (isPreview) showPreviewBanner();
     } catch (error) {
       console.error(error);
       renderGalleryFromSaved([]);
