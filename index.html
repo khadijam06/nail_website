@@ -666,6 +666,13 @@
 </footer>
 
 <script>
+  // Preview mode (admin's live editor loads this page with ?preview=1&token=...).
+  // Hoisted to page scope because render functions defined below also need
+  // it: in preview mode, hidden FAQ/nav items still render (dimmed) instead
+  // of disappearing, so the admin has something to click to un-hide them.
+  const cmsUrlParams = new URLSearchParams(window.location.search);
+  const isCmsPreview = cmsUrlParams.get('preview') === '1';
+
   // Nav scroll
   const nav = document.getElementById('nav');
   window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 20));
