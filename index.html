@@ -845,11 +845,15 @@
       if (footLogoText) footLogoText.innerHTML = logoHtml;
     }
 
-    const items = Array.isArray(nav.items) ? nav.items.filter((item) => item.visible !== false) : null;
-    if (items) {
+    const allNavItems = Array.isArray(nav.items) ? nav.items : null;
+    if (allNavItems) {
+      // In preview (admin) mode, hidden items stay in the DOM (dimmed) so
+      // there's something to click to un-hide them; real visitors never see them.
+      const items = isCmsPreview ? allNavItems : allNavItems.filter((item) => item.visible !== false);
+      const itemClass = (item) => (item.visible === false ? ' class="cms-hidden-item"' : '');
       const navLinksList = document.getElementById('navLinksList');
       if (navLinksList) {
-        navLinksList.innerHTML = items.map((item) => `<li><a href="${escapeHtml(item.href || '#')}">${escapeHtml(item.label || '')}</a></li>`).join('');
+        navLinksList.innerHTML = items.map((item) => `<li${itemClass(item)}><a href="${escapeHtml(item.href || '#')}">${escapeHtml(item.label || '')}</a></li>`).join('');
       }
       const mobLinksList = document.getElementById('mobLinksList');
       if (mobLinksList) {
