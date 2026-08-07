@@ -1188,6 +1188,11 @@
       console.error(error);
       renderGalleryFromSaved([]);
       setGalleryMessage('Gallery images could not be loaded right now. Please refresh the page in a moment.', true);
+    } finally {
+      // Signals that this async load has settled (success or failure), so an
+      // embedding admin frame knows when it's safe to read window.__cmsApply
+      // instead of guessing with a timeout.
+      window.dispatchEvent(new Event('cms:contentready'));
     }
   }
 
