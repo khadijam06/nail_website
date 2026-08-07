@@ -1135,9 +1135,8 @@
     const message = document.getElementById('galleryMessage');
     if (!grid || !message) return;
 
-    const params = new URLSearchParams(window.location.search);
-    const isPreview = params.get('preview') === '1';
-    const previewToken = params.get('token') || '';
+    const isPreview = isCmsPreview;
+    const previewToken = cmsUrlParams.get('token') || '';
 
     let contentUrl = '/api/content?page=homepage,navigation,footer,faq,branding';
     if (isPreview && previewToken) {
