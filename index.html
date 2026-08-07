@@ -900,10 +900,12 @@
     textOrKeep(document.getElementById('faqSub'), faq.sub);
 
     const grid = document.getElementById('faqGrid');
-    const items = Array.isArray(faq.items) ? faq.items.filter((item) => item.visible !== false) : null;
-    if (grid && items && items.length) {
+    const allFaqItems = Array.isArray(faq.items) ? faq.items : null;
+    if (grid && allFaqItems && allFaqItems.length) {
+      // See applyNavigation: preview mode keeps hidden items in the DOM (dimmed).
+      const items = isCmsPreview ? allFaqItems : allFaqItems.filter((item) => item.visible !== false);
       grid.innerHTML = items.map((item, index) => `
-        <div class="faq-item fade in d${(index % 4) + 1}">
+        <div class="faq-item fade in d${(index % 4) + 1}${item.visible === false ? ' cms-hidden-item' : ''}">
           <div class="faq-q" onclick="toggleFaq(this)">${escapeHtml(item.question || '')}<div class="faq-ico">+</div></div>
           <div class="faq-a">${escapeHtml(item.answer || '')}</div>
         </div>
