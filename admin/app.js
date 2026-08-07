@@ -1,4 +1,14 @@
-import { getToken, clearToken, login, onUnauthorized, getDashboard } from './api-client.js';
+import { getToken, clearToken, login, onUnauthorized, getDashboard, escapeHtml } from './api-client.js';
+import { fetchUnassignedAssets, deleteUnassignedAsset, closeProductModal } from './sections/products.js';
+import * as homepageEditor from './pages/homepage-editor.js';
+
+const DASHBOARD_KEYS = [
+  { key: 'homepage', label: 'Homepage' },
+  { key: 'navigation', label: 'Navigation' },
+  { key: 'footer', label: 'Footer' },
+  { key: 'faq', label: 'FAQ' },
+  { key: 'branding', label: 'Branding' },
+];
 
 const NAV_GROUPS = [
   {
@@ -6,30 +16,35 @@ const NAV_GROUPS = [
     items: [{ key: 'dashboard', label: 'Dashboard', kind: 'dashboard' }],
   },
   {
-    label: 'Website content',
+    label: 'Website',
     items: [
-      { key: 'homepage', label: 'Homepage', kind: 'content', contentKey: 'homepage', previewPath: '/index.html' },
-      { key: 'branding', label: 'Branding', kind: 'content', contentKey: 'branding', previewPath: '/index.html' },
-      { key: 'navigation', label: 'Navigation', kind: 'content', contentKey: 'navigation', previewPath: '/index.html' },
-      { key: 'footer', label: 'Footer', kind: 'content', contentKey: 'footer', previewPath: '/index.html' },
-      { key: 'faq', label: 'FAQ', kind: 'content', contentKey: 'faq', previewPath: '/index.html#faq' },
+      { key: 'homepage', label: 'Homepage', kind: 'live', family: 'homepage-live', scrollTarget: 'top' },
+      { key: 'branding', label: 'Branding', kind: 'live', family: 'homepage-live', scrollTarget: 'top', showBranding: true },
+      { key: 'navigation', label: 'Navigation', kind: 'live', family: 'homepage-live', scrollTarget: 'top' },
+      { key: 'footer', label: 'Footer', kind: 'live', family: 'homepage-live', scrollTarget: 'footer' },
+      { key: 'faq', label: 'FAQ', kind: 'live', family: 'homepage-live', scrollTarget: '#faq' },
+      { key: 'gallery', label: 'Homepage Gallery', kind: 'live', family: 'homepage-live', scrollTarget: '#gallery' },
     ],
   },
   {
-    label: 'Products & photos',
+    label: 'Styles',
     items: [
-      { key: 'products', label: 'Nail Sets (all categories)', kind: 'operational' },
-      { key: 'gallery', label: 'Homepage Gallery', kind: 'operational' },
+      { key: 'category-chrome', label: 'Chrome', kind: 'category', category: 'Chrome', pageFile: 'styles-chrome.html' },
+      { key: 'category-french-tips', label: 'French Tips', kind: 'category', category: 'French Tips', pageFile: 'styles-french-tips.html' },
+      { key: 'category-cateye', label: 'Cateye', kind: 'category', category: 'Cateye', pageFile: 'styles-cateye.html' },
+      { key: 'category-3d-art', label: '3D Art', kind: 'category', category: '3D Art', pageFile: 'styles-3d-art.html' },
     ],
   },
   {
-    label: 'Coming in Phase 2',
+    label: 'Tools',
+    items: [
+      { key: 'unassigned', label: 'Unassigned Uploads', kind: 'operational' },
+    ],
+  },
+  {
+    label: 'Coming later',
     items: [
       { key: 'order-page', label: 'Order Page', kind: 'disabled' },
-      { key: 'category-chrome', label: 'Chrome', kind: 'disabled' },
-      { key: 'category-french-tips', label: 'French Tips', kind: 'disabled' },
-      { key: 'category-cateye', label: 'Cateye', kind: 'disabled' },
-      { key: 'category-3d-art', label: '3D Art', kind: 'disabled' },
       { key: 'settings', label: 'Settings', kind: 'disabled' },
     ],
   },
@@ -38,16 +53,6 @@ const NAV_GROUPS = [
 const NAV_ITEMS_BY_KEY = new Map(
   NAV_GROUPS.flatMap((group) => group.items).map((item) => [item.key, item]),
 );
-
-const MODULE_LOADERS = {
-  homepage: () => import('./sections/homepage.js'),
-  branding: () => import('./sections/branding.js'),
-  navigation: () => import('./sections/navigation.js'),
-  footer: () => import('./sections/footer.js'),
-  faq: () => import('./sections/faq.js'),
-  products: () => import('./sections/products.js'),
-  gallery: () => import('./sections/gallery.js'),
-};
 
 const loginCard = document.getElementById('loginCard');
 const shell = document.getElementById('adminShell');
@@ -58,6 +63,7 @@ const toastEl = document.getElementById('toast');
 const loginStatusEl = document.getElementById('loginStatusMessage');
 
 let currentKey = '';
+let currentFamily = '';
 let currentController = null;
 
 function showToast(message, type = 'info') {
@@ -89,6 +95,7 @@ function showLogin() {
 function doLogout() {
   clearToken();
   currentController = null;
+  currentFamily = '';
   currentKey = '';
   showLogin();
 }
@@ -126,29 +133,22 @@ function setActiveSidebarLink(key) {
 
 function confirmDiscardIfDirty() {
   if (currentController && typeof currentController.isDirty === 'function' && currentController.isDirty()) {
-    return window.confirm('You have unsaved changes on this page. Leave without saving?');
+    return window.confirm('You have unsaved changes. Leave without saving?');
   }
   return true;
 }
 
 function renderTopbarActions(item) {
-  if (!item || item.kind !== 'content') {
+  if (!item || item.kind !== 'live') {
     topbarActionsEl.innerHTML = '';
     return;
   }
 
   topbarActionsEl.innerHTML = `
-    <button type="button" class="btn btn-secondary" id="actionPreview">Preview</button>
     <button type="button" class="btn btn-secondary" id="actionCancel">Cancel Changes</button>
     <button type="button" class="btn btn-secondary" id="actionSaveDraft">Save Draft</button>
     <button type="button" class="btn" id="actionPublish">Publish</button>
   `;
-
-  document.getElementById('actionPreview').addEventListener('click', () => {
-    const token = getToken();
-    const separator = item.previewPath.includes('?') ? '&' : '?';
-    window.open(`${item.previewPath}${separator}preview=1&token=${encodeURIComponent(token)}`, '_blank', 'noopener');
-  });
 
   document.getElementById('actionCancel').addEventListener('click', async () => {
     if (!currentController) return;
@@ -189,33 +189,30 @@ async function renderDashboard(container) {
   container.innerHTML = '<p class="muted">Loading dashboard...</p>';
   try {
     const sections = await getDashboard();
-    const rows = sections
-      .filter((section) => NAV_ITEMS_BY_KEY.has(section.key) || section.key.startsWith('category-') || section.key === 'order-page')
-      .map((section) => {
-        const navItem = NAV_ITEMS_BY_KEY.get(section.key);
-        const label = navItem ? navItem.label : section.key;
-        const editable = navItem && navItem.kind !== 'disabled';
-        return `
-          <div class="row dashboard-row">
-            <div style="font-weight:700;">${label}</div>
-            <div class="small">${section.isSeeded ? '' : 'Not migrated yet'}</div>
-            <div>${section.hasUnpublishedChanges ? '<span class="badge draft">Unpublished changes</span>' : '<span class="badge published">Up to date</span>'}</div>
-            <div class="small">Draft saved: ${section.draftUpdatedAt ? new Date(section.draftUpdatedAt).toLocaleString() : '—'}</div>
-            <div class="small">Published: ${section.publishedUpdatedAt ? new Date(section.publishedUpdatedAt).toLocaleString() : '—'}</div>
-            <div>${editable ? `<button class="btn btn-secondary" data-goto="${section.key}">Edit</button>` : ''}</div>
-          </div>
-        `;
-      })
-      .join('');
+    const byKey = new Map(sections.map((s) => [s.key, s]));
+
+    const rows = DASHBOARD_KEYS.map(({ key, label }) => {
+      const section = byKey.get(key) || {};
+      return `
+        <div class="row dashboard-row">
+          <div style="font-weight:700;">${label}</div>
+          <div class="small">${section.isSeeded ? '' : 'Not migrated yet'}</div>
+          <div>${section.hasUnpublishedChanges ? '<span class="badge draft">Unpublished changes</span>' : '<span class="badge published">Up to date</span>'}</div>
+          <div class="small">Draft saved: ${section.draftUpdatedAt ? new Date(section.draftUpdatedAt).toLocaleString() : '—'}</div>
+          <div class="small">Published: ${section.publishedUpdatedAt ? new Date(section.publishedUpdatedAt).toLocaleString() : '—'}</div>
+          <div><button class="btn btn-secondary" data-goto="${key}">Edit</button></div>
+        </div>
+      `;
+    }).join('');
 
     container.innerHTML = `
       <div class="card">
         <div class="section-title"><h2>Welcome back</h2></div>
-        <p class="muted">This is your private control panel for Nail It By K. Pick a section from the left to edit it. Every content page has its own Save Draft / Preview / Publish so you can review changes before your visitors see them.</p>
+        <p class="muted">This is your private control panel for Nail It By K. Pick a section from the left — you'll see the real page and can edit it directly. Nothing goes live until you Publish.</p>
       </div>
       <div class="card">
         <div class="section-title"><h2>Section status</h2></div>
-        <div class="dashboard-list">${rows || '<p class="muted">No sections found.</p>'}</div>
+        <div class="dashboard-list">${rows}</div>
       </div>
     `;
 
@@ -227,42 +224,124 @@ async function renderDashboard(container) {
   }
 }
 
+async function renderUnassignedPanel(container) {
+  container.innerHTML = `
+    <div class="card">
+      <div class="section-title">
+        <h2>Unassigned Uploads</h2>
+        <button class="btn btn-secondary" type="button" id="refreshUnassignedBtn">Refresh</button>
+      </div>
+      <p class="muted" style="margin-bottom:10px;">Images uploaded but not attached to any saved product yet.</p>
+      <div id="unassignedList"></div>
+    </div>
+  `;
+
+  const listEl = container.querySelector('#unassignedList');
+
+  async function load() {
+    listEl.innerHTML = '<p class="muted">Loading...</p>';
+    try {
+      const assets = await fetchUnassignedAssets();
+      if (!assets.length) {
+        listEl.innerHTML = '<p class="muted">No unassigned images. Great.</p>';
+        return;
+      }
+      listEl.innerHTML = assets.map((asset) => `
+        <div class="img-row">
+          <img src="${escapeHtml(asset.url)}" alt="Unassigned image">
+          <div>
+            <div style="font-weight:700;word-break:break-all;">${escapeHtml(asset.publicId)}</div>
+            <div class="small">Created: ${escapeHtml(asset.createdAt ? new Date(asset.createdAt).toLocaleString() : '-')}</div>
+          </div>
+          <div class="img-controls">
+            <button class="btn btn-danger" type="button" data-id="${escapeHtml(asset.publicId)}">Delete</button>
+          </div>
+        </div>
+      `).join('');
+
+      listEl.querySelectorAll('[data-id]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          if (!window.confirm('Delete this unassigned image permanently?')) return;
+          try {
+            await deleteUnassignedAsset(btn.getAttribute('data-id'));
+            showToast('Image deleted.', 'success');
+            load();
+          } catch (error) {
+            showToast(error.message || 'Delete failed', 'error');
+          }
+        });
+      });
+    } catch (error) {
+      listEl.innerHTML = `<div class="status error">${error.message || 'Failed to load'}</div>`;
+    }
+  }
+
+  container.querySelector('#refreshUnassignedBtn').addEventListener('click', load);
+  await load();
+}
+
 async function mountSection(key) {
   const item = NAV_ITEMS_BY_KEY.get(key);
   if (!item || item.kind === 'disabled') return;
 
+  // The product modal renders into its own document.body-level root (not
+  // contentAreaEl), since it needs to float above whichever category page
+  // opened it — close it on any navigation so it can't get orphaned.
+  closeProductModal();
+
+  if (item.kind === 'live' && item.family === 'homepage-live') {
+    if (currentFamily !== 'homepage-live') {
+      contentAreaEl.innerHTML = '';
+      currentFamily = 'homepage-live';
+      renderTopbarActions(item);
+      try {
+        currentController = await homepageEditor.mount(contentAreaEl, { showToast });
+      } catch (error) {
+        contentAreaEl.innerHTML = `<div class="status error">${error.message || 'Failed to load the live editor'}</div>`;
+        currentFamily = '';
+        return;
+      }
+    }
+    homepageEditor.scrollTo(item.scrollTarget);
+    homepageEditor.setBrandingPanelVisible(Boolean(item.showBranding), contentAreaEl);
+    renderTopbarActions(item);
+    return;
+  }
+
+  currentFamily = '';
   contentAreaEl.innerHTML = '';
   currentController = null;
-  renderTopbarActions(item);
+  renderTopbarActions(null);
 
   if (item.kind === 'dashboard') {
     await renderDashboard(contentAreaEl);
     return;
   }
 
-  const loader = MODULE_LOADERS[key];
-  if (!loader) {
-    contentAreaEl.innerHTML = '<div class="status error">This section is not available yet.</div>';
+  if (item.kind === 'category') {
+    try {
+      const module = await import('./pages/category-editor.js');
+      await module.mount(contentAreaEl, { showToast, category: item.category, pageFile: item.pageFile });
+    } catch (error) {
+      contentAreaEl.innerHTML = `<div class="status error">${error.message || 'Failed to load this category'}</div>`;
+    }
     return;
   }
 
-  try {
-    const module = await loader();
-    const controller = await module.mount(contentAreaEl, { showToast });
-    if (item.kind === 'content' && controller) {
-      currentController = controller;
-      // Re-render the topbar action handlers now that the controller exists
-      // (the buttons were built before mount() finished loading data).
-      renderTopbarActions(item);
-    }
-  } catch (error) {
-    contentAreaEl.innerHTML = `<div class="status error">${error.message || 'Failed to load this section'}</div>`;
+  if (item.key === 'unassigned') {
+    await renderUnassignedPanel(contentAreaEl);
+    return;
   }
+
+  contentAreaEl.innerHTML = '<div class="status error">This section is not available yet.</div>';
 }
 
 function navigateTo(key) {
-  if (!NAV_ITEMS_BY_KEY.has(key) || key === currentKey) return;
-  if (!confirmDiscardIfDirty()) return;
+  const item = NAV_ITEMS_BY_KEY.get(key);
+  if (!item || key === currentKey) return;
+
+  const isSameFamily = Boolean(item.family) && item.family === currentFamily;
+  if (!isSameFamily && !confirmDiscardIfDirty()) return;
 
   currentKey = key;
   setActiveSidebarLink(key);

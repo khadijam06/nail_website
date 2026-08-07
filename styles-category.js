@@ -205,6 +205,11 @@ async function loadCategoryProducts() {
   } catch (error) {
     console.error(error);
     grid.innerHTML = '<p style="color:var(--mauve);">Unable to load this category right now.</p>';
+  } finally {
+    // Signals that this async load has settled — the admin's live editor
+    // (same-origin iframe) waits for this instead of guessing with a timeout
+    // before attaching product-card overlays.
+    window.dispatchEvent(new Event('cms:productsready'));
   }
 }
 
@@ -246,3 +251,8 @@ window.prevGalleryImage = prevGalleryImage;
 window.addToBasket = addToBasket;
 window.closeBasketModal = closeBasketModal;
 window.clearBasket = clearBasket;
+
+// Exposed so the admin's live visual editor (same-origin iframe) can trigger
+// a re-fetch/re-render after creating, editing, duplicating or deleting a
+// product, reusing this exact rendering path instead of duplicating it.
+window.loadCategoryProducts = loadCategoryProducts;
