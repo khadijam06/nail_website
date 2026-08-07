@@ -1169,6 +1169,17 @@
         applyGallerySectionText(home.gallerySection);
         applyOrderCta(home.orderCta);
         applyMarquee(home.marquee);
+
+        // Exposed so the admin's live visual editor (loaded in a same-origin
+        // iframe) can read the current data and re-invoke these exact render
+        // functions after an edit, instead of re-implementing rendering.
+        // Inert for real visitors — nothing on this page reads these back.
+        window.__cmsSections = sections;
+        window.__cmsApply = {
+          applyBranding, applyNavigation, applyFooter, applyFaq,
+          applyHero, applyHowItWorks, applyStylesSection, applyWhyUs,
+          applyGallerySectionText, applyOrderCta, applyMarquee,
+        };
       }
 
       if (isPreview) showPreviewBanner();
