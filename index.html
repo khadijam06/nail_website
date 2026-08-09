@@ -243,7 +243,7 @@
     .foot-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
     .foot-col-t { font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: white; margin-bottom: 14px; }
     .foot-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-    .foot-links a { text-decoration: none; color: rgba(255,255,255,.55); font-size: 13px; }
+    .foot-links a, .foot-links span { text-decoration: none; color: rgba(255,255,255,.55); font-size: 13px; }
     .foot-div { height: 1px; background: rgba(255,255,255,.08); margin-bottom: 20px; }
     .foot-bot { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
     .foot-copy { font-size: 11px; color: rgba(255,255,255,.4); }
@@ -632,6 +632,9 @@
           <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="foot-soc" aria-label="Instagram" id="footInstagramLink">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
           </a>
+          <a href="#" target="_blank" rel="noopener" class="foot-soc" aria-label="TikTok" id="footTiktokLink" style="display:none">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82c-1.36-1.16-2.11-2.84-2.11-4.61h-3.09v14.1a2.887 2.887 0 0 1-5.19 1.73 2.89 2.89 0 0 1 2.5-4.59c.3 0 .58.05.85.13V9.4a6.15 6.15 0 0 0-.85-.06A6.09 6.09 0 0 0 2.62 18.6a6.09 6.09 0 0 0 10.36-4.34V8.13a9.34 9.34 0 0 0 5.46 1.75V6.79a5.94 5.94 0 0 1-1.84-.97z"/></svg>
+          </a>
         </div>
       </div>
       <div class="foot-cols">
@@ -801,6 +804,32 @@
     if (el && typeof value === 'string' && value.trim()) el.setAttribute('href', value);
   }
 
+  // Social icons (Instagram/TikTok) only exist when a URL is configured —
+  // hidden by default in the HTML so there's never an empty/dead icon, and
+  // toggled visible here rather than left to fall back to hardcoded content
+  // like text fields, since a blank URL has nothing sensible to keep.
+  function toggleSocialLink(el, url) {
+    if (!el) return;
+    if (url && url.trim()) {
+      el.style.display = '';
+      el.setAttribute('href', url);
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  // Marked with foot-contact-fixed so the admin's editable-items list (which
+  // maps DOM position to the contactLinks array by index) can tell these
+  // dedicated fields apart from the generic reorderable link list.
+  function contactItemHtml(label, href) {
+    if (!label || !String(label).trim()) return '';
+    if (href && String(href).trim()) {
+      const external = /^https?:/i.test(href);
+      return `<li class="foot-contact-fixed"><a href="${escapeHtml(href)}"${external ? ' target="_blank" rel="noopener"' : ''}>${escapeHtml(label)}</a></li>`;
+    }
+    return `<li class="foot-contact-fixed"><span>${escapeHtml(label)}</span></li>`;
+  }
+
   function applyHeadingLines(el, value) {
     if (!el || !value) return;
     el.innerHTML = String(value).split('\n').map(escapeHtml).join('<br>');
@@ -873,9 +902,11 @@
   function applyFooter(footer) {
     if (!footer) return;
     textOrKeep(document.getElementById('footTagline'), footer.tagline);
-    hrefOrKeep(document.getElementById('footInstagramLink'), footer.instagramUrl);
     textOrKeep(document.getElementById('footCopyright'), footer.copyrightText);
     textOrKeep(document.getElementById('footMadeWith'), footer.madeWithText);
+
+    toggleSocialLink(document.getElementById('footInstagramLink'), footer.instagramUrl);
+    toggleSocialLink(document.getElementById('footTiktokLink'), footer.tiktokUrl);
 
     const linkListHtml = (links) => links.map((link) => {
       const href = link.href || '#';
@@ -887,9 +918,23 @@
     if (navigateEl && Array.isArray(footer.navigateLinks) && footer.navigateLinks.length) {
       navigateEl.innerHTML = linkListHtml(footer.navigateLinks);
     }
+
     const contactEl = document.getElementById('footContactLinks');
-    if (contactEl && Array.isArray(footer.contactLinks) && footer.contactLinks.length) {
-      contactEl.innerHTML = linkListHtml(footer.contactLinks);
+    if (contactEl) {
+      const phoneHref = footer.phone && footer.phone.trim() ? `tel:${footer.phone.replace(/[^0-9+]/g, '')}` : '';
+      const dynamicHtml = [
+        contactItemHtml(footer.instagramHandle, footer.instagramUrl),
+        contactItemHtml(footer.tiktokHandle, footer.tiktokUrl),
+        contactItemHtml(footer.phone, phoneHref),
+      ].join('');
+      const restHtml = Array.isArray(footer.contactLinks) ? linkListHtml(footer.contactLinks) : '';
+      // Only fully replace the fallback markup once there's something CMS-driven
+      // to show — otherwise a footer saved before this feature existed (no
+      // dynamic fields, empty contactLinks) would blank the column instead of
+      // leaving the hardcoded content in place.
+      if (dynamicHtml || restHtml) {
+        contactEl.innerHTML = dynamicHtml + restHtml;
+      }
     }
   }
 

@@ -210,6 +210,8 @@ textarea { min-height: 90px; resize: vertical; }
   z-index: 2000;
   width: 320px;
   max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 16px;

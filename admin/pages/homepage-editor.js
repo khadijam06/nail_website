@@ -488,15 +488,22 @@ function mountAllRegions() {
   });
 
   // Footer
-  mountText('footer-brand', '.foot-brand', 'Footer tagline', [
+  mountText('footer-brand', '.foot-brand', 'Tagline & social links', [
     { path: 'tagline', label: 'Tagline', type: 'textarea', maxLength: 400 },
     { path: 'instagramUrl', label: 'Instagram URL', type: 'url', maxLength: 300 },
+    { path: 'instagramHandle', label: 'Instagram handle', type: 'text', maxLength: 60 },
+    { path: 'tiktokUrl', label: 'TikTok URL', type: 'url', maxLength: 300 },
+    { path: 'tiktokHandle', label: 'TikTok handle', type: 'text', maxLength: 60 },
+    { path: 'phone', label: 'Phone number', type: 'text', maxLength: 40 },
   ], 'footer');
   mountList('footer-navigate-links', '#footNavigateLinks', 'li', 'navigateLinks', [
     { path: 'label', label: 'Label', type: 'text', maxLength: 80 },
     { path: 'href', label: 'Link', type: 'url', maxLength: 300 },
   ], 'footer', { itemTitle: (item) => item.label || 'Edit link', newItem: () => ({ label: 'New Link', href: '#' }), addLabel: 'Add navigate link' });
-  mountList('footer-contact-links', '#footContactLinks', 'li', 'contactLinks', [
+  // :not(.foot-contact-fixed) excludes the Instagram/TikTok/phone lines
+  // above (which applyFooter renders as fixed leading items, not part of
+  // this array) so DOM position still lines up 1:1 with footer.contactLinks.
+  mountList('footer-contact-links', '#footContactLinks', 'li:not(.foot-contact-fixed)', 'contactLinks', [
     { path: 'label', label: 'Label', type: 'text', maxLength: 80 },
     { path: 'href', label: 'Link', type: 'url', maxLength: 300 },
   ], 'footer', { itemTitle: (item) => item.label || 'Edit link', newItem: () => ({ label: 'New Link', href: '#' }), addLabel: 'Add contact link' });
