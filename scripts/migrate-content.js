@@ -31,13 +31,10 @@ const SEED_DATA = {
 
   footer: {
     tagline: 'Custom gel press-on nails, hand-made to match your inspo and delivered to your door across Qatar.',
-    instagramUrl: 'https://instagram.com/nail.it.qa',
+    instagramUrl: 'https://www.instagram.com/nail.it.qa?igsh=eHIyOXY4emJ2emlt&utm_source=qr',
     instagramHandle: '@nail.it.qa',
-    // Left blank intentionally: no TikTok/phone info existed on the live
-    // site before this feature, so both stay hidden until edited in admin.
-    tiktokUrl: '',
-    tiktokHandle: '',
-    phone: '',
+    tiktokUrl: 'https://www.tiktok.com/@nail.it.qa?_r=1&_t=ZS-98jhKWuVPpx',
+    phone: '+974 7008 1288',
     navigateLinks: [
       { label: 'How it Works', href: '#how' },
       { label: 'Styles', href: '#styles' },

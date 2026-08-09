@@ -629,10 +629,10 @@
         </a>
         <p class="foot-tag" id="footTagline">Custom gel press-on nails, hand-made to match your inspo and delivered to your door across Qatar.</p>
         <div class="foot-socials">
-          <a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener" class="foot-soc" aria-label="Instagram" id="footInstagramLink">
+          <a href="https://www.instagram.com/nail.it.qa?igsh=eHIyOXY4emJ2emlt&amp;utm_source=qr" target="_blank" rel="noopener" class="foot-soc" aria-label="Instagram" id="footInstagramLink">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
           </a>
-          <a href="#" target="_blank" rel="noopener" class="foot-soc" aria-label="TikTok" id="footTiktokLink" style="display:none">
+          <a href="https://www.tiktok.com/@nail.it.qa?_r=1&amp;_t=ZS-98jhKWuVPpx" target="_blank" rel="noopener" class="foot-soc" aria-label="TikTok" id="footTiktokLink">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82c-1.36-1.16-2.11-2.84-2.11-4.61h-3.09v14.1a2.887 2.887 0 0 1-5.19 1.73 2.89 2.89 0 0 1 2.5-4.59c.3 0 .58.05.85.13V9.4a6.15 6.15 0 0 0-.85-.06A6.09 6.09 0 0 0 2.62 18.6a6.09 6.09 0 0 0 10.36-4.34V8.13a9.34 9.34 0 0 0 5.46 1.75V6.79a5.94 5.94 0 0 1-1.84-.97z"/></svg>
           </a>
         </div>
@@ -652,7 +652,8 @@
         <div>
           <div class="foot-col-t">Get in Touch</div>
           <ul class="foot-links" id="footContactLinks">
-            <li><a href="https://instagram.com/nail.it.qa" target="_blank" rel="noopener">@nail.it.qa</a></li>
+            <li class="foot-contact-fixed"><a href="https://www.instagram.com/nail.it.qa?igsh=eHIyOXY4emJ2emlt&amp;utm_source=qr" target="_blank" rel="noopener">@nail.it.qa</a></li>
+            <li class="foot-contact-fixed"><a href="tel:+97470081288">+974 7008 1288</a></li>
             <li><a href="#pricing">DM to Order</a></li>
             <li><a href="#about">About Us</a></li>
             <li><a href="#">Doha, Qatar</a></li>
@@ -924,7 +925,6 @@
       const phoneHref = footer.phone && footer.phone.trim() ? `tel:${footer.phone.replace(/[^0-9+]/g, '')}` : '';
       const dynamicHtml = [
         contactItemHtml(footer.instagramHandle, footer.instagramUrl),
-        contactItemHtml(footer.tiktokHandle, footer.tiktokUrl),
         contactItemHtml(footer.phone, phoneHref),
       ].join('');
       const restHtml = Array.isArray(footer.contactLinks) ? linkListHtml(footer.contactLinks) : '';

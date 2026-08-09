@@ -490,10 +490,9 @@ function mountAllRegions() {
   // Footer
   mountText('footer-brand', '.foot-brand', 'Tagline & social links', [
     { path: 'tagline', label: 'Tagline', type: 'textarea', maxLength: 400 },
-    { path: 'instagramUrl', label: 'Instagram URL', type: 'url', maxLength: 300 },
+    { path: 'instagramUrl', label: 'Instagram icon link', type: 'url', maxLength: 300 },
     { path: 'instagramHandle', label: 'Instagram handle', type: 'text', maxLength: 60 },
-    { path: 'tiktokUrl', label: 'TikTok URL', type: 'url', maxLength: 300 },
-    { path: 'tiktokHandle', label: 'TikTok handle', type: 'text', maxLength: 60 },
+    { path: 'tiktokUrl', label: 'TikTok icon link', type: 'url', maxLength: 300 },
     { path: 'phone', label: 'Phone number', type: 'text', maxLength: 40 },
   ], 'footer');
   mountList('footer-navigate-links', '#footNavigateLinks', 'li', 'navigateLinks', [
