@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "test": "node --test",
     "migrate:content": "node scripts/migrate-content.js"
   },
   "dependencies": {
+    "@vercel/postgres": "^0.10.0",
     "cloudinary": "^1.38.1",
-    "formidable": "^3.5.4"
+    "formidable": "^3.5.4",
+    "nodemailer": "^6.9.16"
   }
 }

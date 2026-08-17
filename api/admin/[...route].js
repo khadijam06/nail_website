@@ -34,6 +34,13 @@ const {
   listSectionsMeta,
 } = require('../../server/content-store');
 const { sanitizePatch } = require('../../server/content-validate');
+const {
+  ensureOrdersTable,
+  listOrdersFromStore,
+  findOrderById,
+  updateOrderStatus,
+  archiveOrder,
+} = require('../../server/orders');
 
 const ALLOWED_UPLOAD_FOLDERS = ['nailit_gallery', 'nailit_branding', 'nailit_content'];
 
@@ -441,6 +448,66 @@ async function handleDashboard(req, res, cloudinary) {
   return sendJson(res, 200, { success: true, sections, allSectionKeys: SECTION_KEYS });
 }
 
+async function handleOrders(req, res) {
+  await ensureOrdersTable();
+
+  if (req.method === 'GET') {
+    const query = stripRouteQuery(req.query || {});
+    const status = firstValue(query.status) || 'all';
+    const search = firstValue(query.search) || '';
+    const sort = firstValue(query.sort) || 'newest';
+    const orderId = firstValue(query.id || '');
+
+    if (orderId) {
+      const order = await findOrderById(orderId);
+      if (!order) {
+        return sendJson(res, 404, { error: 'Order not found', code: 'ORDER_NOT_FOUND' });
+      }
+      return sendJson(res, 200, { success: true, order });
+    }
+
+    const orders = await listOrdersFromStore({ status, search, sort });
+    const newCount = orders.filter((order) => (order.status || 'New') === 'New').length;
+
+    return sendJson(res, 200, {
+      success: true,
+      orders,
+      total: orders.length,
+      newCount,
+    });
+  }
+
+  if (req.method === 'PUT') {
+    const body = await parseJsonBody(req);
+    if (!body || typeof body !== 'object') {
+      return sendJson(res, 400, { error: 'Request body must be valid JSON', code: 'INVALID_BODY' });
+    }
+
+    const orderId = body.orderId || body.id || firstValue(req?.query?.id || '');
+    if (!orderId) {
+      return sendJson(res, 400, { error: 'Order ID is required', code: 'INVALID_ORDER_ID' });
+    }
+
+    if (body.action === 'archive') {
+      const archived = await archiveOrder(orderId);
+      return sendJson(res, 200, { success: true, archived, order: await findOrderById(orderId) });
+    }
+
+    const status = body.status || 'New';
+    const order = await updateOrderStatus(orderId, status);
+    if (!order) {
+      return sendJson(res, 404, { error: 'Order not found', code: 'ORDER_NOT_FOUND' });
+    }
+
+    return sendJson(res, 200, { success: true, order });
+  }
+
+  return sendJson(res, 405, {
+    error: 'Method not allowed',
+    expectedMethods: ['GET', 'PUT'],
+  });
+}
+
 module.exports = async function handler(req, res) {
   console.log('[admin-router] request start', {
     method: req?.method,
@@ -499,6 +566,10 @@ module.exports = async function handler(req, res) {
       return handleDashboard(req, res, cloudinary);
     }
 
+    if (section === 'orders') {
+      return handleOrders(req, res);
+    }
+
     if (section === 'list') {
       const products = await listProducts(cloudinary);
       return sendJson(res, 200, { images: products.flatMap((p) => p.images || []) });
@@ -516,7 +587,7 @@ module.exports = async function handler(req, res) {
 
     return sendJson(res, 404, {
       error: 'Unknown admin route',
-      availableRoutes: ['login', 'products', 'upload', 'unassigned', 'gallery', 'content', 'dashboard'],
+      availableRoutes: ['login', 'products', 'upload', 'unassigned', 'gallery', 'content', 'dashboard', 'orders'],
     });
   } catch (error) {
     console.error('[admin-router] catch', error);

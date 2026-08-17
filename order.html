@@ -270,10 +270,7 @@
 <!-- ORDER FORM -->
 <section style="background:white">
   <div class="container">
-    <form id="orderForm" action="https://formsubmit.co/ajax/nailitbyk28@gmail.com" method="POST" enctype="multipart/form-data">
-      <input type="hidden" name="_subject" value="New Nail Order Request">
-      <input type="hidden" name="_captcha" value="false">
-      <input type="hidden" name="_template" value="table">
+    <form id="orderForm" action="/api/orders" method="POST" enctype="multipart/form-data">
       <!-- SIZING UPLOAD -->
       <div class="form-section fade">
         <h3><span class="form-section-icon">📏</span> Your Sizing Photos</h3>
@@ -321,6 +318,16 @@
       <!-- CUSTOMER DETAILS -->
       <div class="form-section fade">
         <h3><span class="form-section-icon">📋</span> Your Details</h3>
+
+        <div class="form-group">
+          <label for="name">Full Name <span class="required">*</span></label>
+          <input type="text" id="name" name="name" placeholder="Your full name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address <span class="required">*</span></label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        </div>
         
         <div class="form-group">
           <label for="phone">Phone Number <span class="required">*</span></label>
@@ -425,37 +432,63 @@
   });
 
   // Form submission
-  document.getElementById('orderForm').addEventListener('submit', function(e) {
+  document.getElementById('orderForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    const formData = new FormData(this);
+    const form = this;
+    const formData = new FormData(form);
     const successBox = document.getElementById('successBox');
+    const submitButton = form.querySelector('button[type="submit"]');
 
-    successBox.innerHTML = '📧 Sending your order details and photos now...';
+    const files = ['leftHand', 'rightHand', 'inspiration']
+      .flatMap((inputId) => Array.from(document.getElementById(inputId).files || []));
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const invalidFile = files.find((file) => !allowedTypes.includes(file.type) && !/\.(jpe?g|png|webp)$/i.test(file.name));
+    if (invalidFile) {
+      successBox.innerHTML = '⚠️ Unsupported file type. Please upload JPG, JPEG, PNG, or WEBP images only.';
+      successBox.classList.add('show');
+      successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const oversizedFile = files.find((file) => (file.size || 0) > 10 * 1024 * 1024);
+    if (oversizedFile) {
+      successBox.innerHTML = '⚠️ One or more images are too large. Please choose images under 10MB each.';
+      successBox.classList.add('show');
+      successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    if (submitButton.disabled) return;
+    submitButton.disabled = true;
+    successBox.innerHTML = '📧 Uploading your photos and sending your order securely...';
     successBox.classList.add('show');
 
-    fetch(this.action, {
-      method: 'POST',
-      body: formData
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Submission failed');
-        }
-        successBox.innerHTML = '✅ Your order has been sent successfully. We will review it shortly.';
-        this.reset();
-        fileInputs.forEach(inputId => {
-          document.getElementById(inputId + 'Preview').innerHTML = '';
-        });
-      })
-      .catch(() => {
-        successBox.innerHTML = '⚠️ The submission could not be completed. Please email nailitbyk28@gmail.com directly with your order details and photos.';
-      })
-      .finally(() => {
-        setTimeout(() => {
-          successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 100);
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        body: formData,
       });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Submission failed');
+      }
+
+      successBox.innerHTML = `✅ ${data.message || 'Your order has been submitted successfully. Order reference: ' + (data.orderId || 'NIK')}`;
+      form.reset();
+      fileInputs.forEach(inputId => {
+        document.getElementById(inputId + 'Preview').innerHTML = '';
+      });
+    } catch (error) {
+      successBox.innerHTML = `⚠️ ${error.message || 'The submission could not be completed. Please try again or email nailitbyk28@gmail.com directly.'}`;
+    } finally {
+      submitButton.disabled = false;
+      setTimeout(() => {
+        successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
   });
 
   // Scroll fade-in

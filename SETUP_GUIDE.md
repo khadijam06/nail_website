@@ -68,18 +68,24 @@ The order.html page will automatically display these in the sizing guide section
 
 ---
 
-## 💾 Form Submission Notes:
+## Order Submission Configuration
 
-The current form shows a success message but doesn't submit to a server. To fully activate the form, you'll need to:
+The order form submits to `/api/orders`. Configure these environment variables in Vercel before deploying:
 
-1. **Backend Option:** Set up a form handler (e.g., Formspree, Netlify Forms, custom backend)
-2. **Email Option:** Connect to email service to receive orders
-3. **Modify the JavaScript:** Update the form submission code to send data to your preferred service
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `POSTGRES_URL` | Yes in production | Vercel Postgres connection string. Production requests fail rather than falling back to memory when this is absent. |
+| `CLOUDINARY_CLOUD_NAME` | Yes | Cloudinary account name for uploaded order images. |
+| `CLOUDINARY_API_KEY` | Yes | Cloudinary API key. |
+| `CLOUDINARY_API_SECRET` | Yes | Cloudinary API secret. |
+| `EMAIL_USER` | Yes | Gmail address used to send order notifications. `GMAIL_USER` is also supported. |
+| `EMAIL_PASS` | Yes | Gmail app password. `GMAIL_APP_PASSWORD` is also supported. |
+| `EMAIL_TO` | Recommended | Inbox that receives order notifications. Defaults to the configured sender address. |
+| `EMAIL_FROM` | Optional | From address shown on notification emails. |
+| `ADMIN_PASSWORD` | Yes for admin access | Password for the admin dashboard. |
+| `ADMIN_JWT_SECRET` | Yes for admin access | Long random secret used to sign admin sessions. |
 
-The JavaScript is ready at the bottom of order.html - just update this section:
-```javascript
-// Around line 350-370, modify the form submission handler
-```
+Create the Vercel Postgres database and connect it to this project so Vercel provides `POSTGRES_URL`. The `orders` table is created automatically on the first authenticated admin order request or public order submission.
 
 ---
 

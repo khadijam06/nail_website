@@ -1,4 +1,14 @@
-import { getToken, clearToken, login, onUnauthorized, getDashboard, escapeHtml } from './api-client.js';
+import {
+  getToken,
+  clearToken,
+  login,
+  onUnauthorized,
+  getDashboard,
+  escapeHtml,
+  getOrders,
+  updateOrderStatus,
+  archiveOrder,
+} from './api-client.js';
 import { fetchUnassignedAssets, deleteUnassignedAsset, closeProductModal } from './sections/products.js';
 import * as homepageEditor from './pages/homepage-editor.js';
 
@@ -36,8 +46,9 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: 'Tools',
+    label: 'Operations',
     items: [
+      { key: 'orders', label: 'Orders', kind: 'orders' },
       { key: 'unassigned', label: 'Unassigned Uploads', kind: 'operational' },
     ],
   },
@@ -65,6 +76,7 @@ const loginStatusEl = document.getElementById('loginStatusMessage');
 let currentKey = '';
 let currentFamily = '';
 let currentController = null;
+let orderBadgeCount = 0;
 
 function showToast(message, type = 'info') {
   if (!toastEl) return;
@@ -105,18 +117,39 @@ onUnauthorized(() => {
   doLogout();
 });
 
+async function refreshOrderBadge() {
+  try {
+    const { newCount = 0 } = await getOrders({ status: 'all', search: '', sort: 'newest' });
+    orderBadgeCount = Number(newCount || 0);
+  } catch {
+    orderBadgeCount = 0;
+  }
+  // renderSidebar() rebuilds the whole sidebar's innerHTML, which drops the
+  // 'active' class on whichever item is currently selected — reapply it so
+  // refreshing the badge (e.g. after every order list load) doesn't make
+  // the sidebar highlight silently disappear.
+  renderSidebar();
+  if (currentKey) setActiveSidebarLink(currentKey);
+}
+
 function renderSidebar() {
   sidebarEl.innerHTML = NAV_GROUPS.map((group) => `
     <div class="sidebar-group">
       <div class="sidebar-group-label">${group.label}</div>
-      ${group.items.map((item) => `
-        <button
-          type="button"
-          class="sidebar-link${item.kind === 'disabled' ? ' disabled' : ''}"
-          data-key="${item.key}"
-          ${item.kind === 'disabled' ? 'disabled title="Coming in a later phase"' : ''}
-        >${item.label}</button>
-      `).join('')}
+      ${group.items.map((item) => {
+        const label = item.key === 'orders'
+          ? `Orders${orderBadgeCount ? ` (${orderBadgeCount})` : ''}`
+          : item.label;
+
+        return `
+          <button
+            type="button"
+            class="sidebar-link${item.kind === 'disabled' ? ' disabled' : ''}"
+            data-key="${item.key}"
+            ${item.kind === 'disabled' ? 'disabled title="Coming in a later phase"' : ''}
+          >${label}</button>
+        `;
+      }).join('')}
     </div>
   `).join('');
 
@@ -328,12 +361,214 @@ async function mountSection(key) {
     return;
   }
 
+  if (item.key === 'orders') {
+    await renderOrdersPanel(contentAreaEl);
+    return;
+  }
+
   if (item.key === 'unassigned') {
     await renderUnassignedPanel(contentAreaEl);
     return;
   }
 
   contentAreaEl.innerHTML = '<div class="status error">This section is not available yet.</div>';
+}
+
+async function renderOrdersPanel(container) {
+  container.innerHTML = `
+    <div class="card">
+      <div class="section-title">
+        <h2>Orders</h2>
+      </div>
+      <div class="orders-toolbar">
+        <input id="ordersSearch" type="search" placeholder="Search by customer, phone, order ID..." aria-label="Search orders">
+        <select id="ordersStatusFilter">
+          <option value="all">All statuses</option>
+          <option value="New">New</option>
+          <option value="Reviewing">Reviewing</option>
+          <option value="Confirmed">Confirmed</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Ready">Ready</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+        <select id="ordersSort">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+      </div>
+      <div id="ordersTableWrap"></div>
+      <div id="ordersDetailWrap"></div>
+    </div>
+  `;
+
+  const ordersTableWrap = container.querySelector('#ordersTableWrap');
+  const ordersDetailWrap = container.querySelector('#ordersDetailWrap');
+  const searchInput = container.querySelector('#ordersSearch');
+  const statusFilter = container.querySelector('#ordersStatusFilter');
+  const sortSelect = container.querySelector('#ordersSort');
+
+  let currentOrderId = '';
+
+  function renderStatusBadge(status) {
+    const safeStatus = status || 'New';
+    const className = safeStatus === 'New' ? 'badge new' : safeStatus === 'Completed' ? 'badge completed' : safeStatus === 'Cancelled' ? 'badge cancelled' : 'badge review';
+    return `<span class="${className}">${safeStatus}</span>`;
+  }
+
+  function renderOrderDetail(order) {
+    if (!order) {
+      ordersDetailWrap.innerHTML = '<p class="muted">Select an order to view the full details.</p>';
+      return;
+    }
+
+    const imageMarkup = (order.images || []).length
+      ? `<div class="order-detail-images">${(order.images || []).map((image) => `
+          <a class="order-image-link" href="${escapeHtml(image.url)}" target="_blank" rel="noopener noreferrer">
+            <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.label || 'Order inspiration')}" />
+          </a>
+        `).join('')}</div>`
+      : '<p class="muted">No inspiration images uploaded.</p>';
+
+    const detail = order.details || {};
+    const lines = [
+      ['Customer name', order.customerName || detail.customerName || '—'],
+      ['Email', order.email || detail.email || '—'],
+      ['Phone', order.phone || detail.phone || '—'],
+      ['Delivery', order.delivery || detail.delivery || '—'],
+      ['Design / category', order.design || detail.design || detail.category || '—'],
+      ['Shape', order.shape || detail.shape || '—'],
+      ['Length', order.length || detail.length || '—'],
+      ['Notes', order.notes || detail.notes || detail.specialRequests || '—'],
+    ];
+
+    const statusOptions = ['New', 'Reviewing', 'Confirmed', 'In Progress', 'Ready', 'Completed', 'Cancelled']
+      .map((value) => `<option value="${value}" ${value === (order.status || 'New') ? 'selected' : ''}>${value}</option>`)
+      .join('');
+
+    ordersDetailWrap.innerHTML = `
+      <div class="order-detail">
+        <div class="section-title">
+          <h3>Order ${escapeHtml(order.orderId || order.id || '')}</h3>
+          <div class="order-detail-actions">
+            <select id="orderStatusSelect" aria-label="Order status">${statusOptions}</select>
+            <button class="btn btn-secondary" type="button" id="archiveOrderBtn">Archive</button>
+          </div>
+        </div>
+        <div class="order-detail-grid">
+          <div class="detail-panel">
+            <div class="detail-header">Customer</div>
+            <div class="detail-list">${lines.map(([label, value]) => `<div><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>`).join('')}</div>
+          </div>
+          <div class="detail-panel">
+            <div class="detail-header">Submission</div>
+            <div class="detail-list">
+              <div><strong>Order ID:</strong> ${escapeHtml(order.orderId || order.id || '')}</div>
+              <div><strong>Date:</strong> ${escapeHtml(order.submittedAt ? new Date(order.submittedAt).toLocaleString() : '—')}</div>
+              <div><strong>Status:</strong> ${renderStatusBadge(order.status || 'New')}</div>
+              <div><strong>Images:</strong> ${escapeHtml(String(order.imageCount || (order.images || []).length || 0))}</div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-panel" style="margin-top:14px;">
+          <div class="detail-header">Inspiration / reference pictures</div>
+          ${imageMarkup}
+        </div>
+      </div>
+    `;
+
+    const statusSelect = ordersDetailWrap.querySelector('#orderStatusSelect');
+    statusSelect.addEventListener('change', async () => {
+      try {
+        const updated = await updateOrderStatus(order.orderId || order.id, statusSelect.value);
+        renderOrderDetail(updated || order);
+        // refreshOrderBadge() re-fetches the authoritative "New" count from
+        // the server, so there's no need to (and no correct way to) guess
+        // the delta here.
+        await refreshOrderBadge();
+        await loadOrders();
+      } catch (error) {
+        showToast(error.message || 'Failed to update status', 'error');
+      }
+    });
+
+    ordersDetailWrap.querySelector('#archiveOrderBtn').addEventListener('click', async () => {
+      if (!window.confirm('Archive this order? It will stay stored but be removed from the active list.')) return;
+      try {
+        await archiveOrder(order.orderId || order.id);
+        showToast('Order archived.', 'success');
+        await loadOrders();
+      } catch (error) {
+        showToast(error.message || 'Failed to archive order', 'error');
+      }
+    });
+  }
+
+  async function loadOrders() {
+    try {
+      const { orders } = await getOrders({
+        status: statusFilter.value,
+        search: searchInput.value,
+        sort: sortSelect.value,
+      });
+
+      if (!orders.length) {
+        ordersTableWrap.innerHTML = '<p class="muted">No orders match your current filter.</p>';
+        ordersDetailWrap.innerHTML = '';
+        return;
+      }
+
+      if (!currentOrderId || !orders.some((order) => (order.orderId || order.id) === currentOrderId)) {
+        currentOrderId = orders[0].orderId || orders[0].id;
+      }
+
+      ordersTableWrap.innerHTML = `
+        <div class="orders-table">
+          <div class="orders-head">
+            <span>Order ID</span>
+            <span>Customer</span>
+            <span>Date</span>
+            <span>Phone</span>
+            <span>Status</span>
+            <span>Images</span>
+          </div>
+          ${orders.map((order) => `
+            <button type="button" class="orders-row ${currentOrderId === (order.orderId || order.id) ? 'selected' : ''}" data-order-id="${escapeHtml(order.orderId || order.id)}">
+              <span><strong>${escapeHtml(order.orderId || order.id || '—')}</strong>${order.status === 'New' ? ' <span class="new-dot">New</span>' : ''}</span>
+              <span>${escapeHtml(order.customerName || '—')}</span>
+              <span>${escapeHtml(order.submittedAt ? new Date(order.submittedAt).toLocaleString() : '—')}</span>
+              <span>${escapeHtml(order.phone || '—')}</span>
+              <span>${renderStatusBadge(order.status || 'New')}</span>
+              <span>${escapeHtml(String(order.imageCount || (order.images || []).length || 0))}</span>
+            </button>
+          `).join('')}
+        </div>
+      `;
+
+      const orderRows = [...ordersTableWrap.querySelectorAll('[data-order-id]')];
+      orderRows.forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          currentOrderId = btn.getAttribute('data-order-id');
+          const nextOrder = orders.find((order) => (order.orderId || order.id) === currentOrderId) || null;
+          renderOrderDetail(nextOrder);
+          await loadOrders();
+        });
+      });
+
+      const selectedOrder = orders.find((order) => (order.orderId || order.id) === currentOrderId) || orders[0];
+      renderOrderDetail(selectedOrder);
+      refreshOrderBadge();
+    } catch (error) {
+      ordersTableWrap.innerHTML = `<div class="status error">${escapeHtml(error.message || 'Failed to load orders')}</div>`;
+      ordersDetailWrap.innerHTML = '';
+    }
+  }
+
+  searchInput.addEventListener('input', () => loadOrders());
+  statusFilter.addEventListener('change', () => loadOrders());
+  sortSelect.addEventListener('change', () => loadOrders());
+
+  await loadOrders();
 }
 
 function navigateTo(key) {
@@ -383,6 +618,7 @@ function boot() {
   }
   showApp();
   renderSidebar();
+  refreshOrderBadge();
   const initialKey = window.location.hash.replace('#', '') || 'dashboard';
   currentKey = NAV_ITEMS_BY_KEY.has(initialKey) ? initialKey : 'dashboard';
   setActiveSidebarLink(currentKey);

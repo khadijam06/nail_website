@@ -151,3 +151,65 @@ export async function getDashboard() {
   }
   return data.sections || [];
 }
+
+export async function getOrders(params = {}) {
+  const query = new URLSearchParams({
+    status: params.status || 'all',
+    search: params.search || '',
+    sort: params.sort || 'newest',
+  });
+
+  const { res, data } = await requestJson(`/api/admin/orders?${query.toString()}`, {
+    headers: authHeaders(),
+  });
+
+  if (!res.ok) {
+    throw new Error(formatApiError(data, 'Failed to load orders'));
+  }
+
+  return {
+    orders: data.orders || [],
+    total: data.total || 0,
+    newCount: data.newCount || 0,
+  };
+}
+
+export async function getOrderById(orderId) {
+  const { res, data } = await requestJson(`/api/admin/orders?id=${encodeURIComponent(orderId)}`, {
+    headers: authHeaders(),
+  });
+
+  if (!res.ok) {
+    throw new Error(formatApiError(data, 'Failed to load order details'));
+  }
+
+  return data.order || null;
+}
+
+export async function updateOrderStatus(orderId, status) {
+  const { res, data } = await requestJson('/api/admin/orders', {
+    method: 'PUT',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ orderId, status }),
+  });
+
+  if (!res.ok) {
+    throw new Error(formatApiError(data, 'Failed to update order status'));
+  }
+
+  return data.order || null;
+}
+
+export async function archiveOrder(orderId) {
+  const { res, data } = await requestJson('/api/admin/orders', {
+    method: 'PUT',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ orderId, action: 'archive' }),
+  });
+
+  if (!res.ok) {
+    throw new Error(formatApiError(data, 'Failed to archive order'));
+  }
+
+  return data.order || null;
+}
