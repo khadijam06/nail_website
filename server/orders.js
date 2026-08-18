@@ -9,6 +9,17 @@ const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_IMAGE_COUNT = 8;
 const MEMORY_STORE = [];
 
+// The three photo categories the order form actually collects, and how each
+// is represented across the codebase: the multipart field name the browser
+// sends, the Cloudinary subfolder/label prefix, and the JS/DB field names.
+// Keeping this in one table is what keeps upload/store/email/admin in sync
+// instead of the categories drifting apart across those four call sites.
+const IMAGE_CATEGORIES = [
+  { field: 'leftHand', slug: 'left-hand', label: 'Left Hand Photo', orderKey: 'leftHandImages', column: 'left_hand_images', heading: 'Left Hand Photos' },
+  { field: 'rightHand', slug: 'right-hand', label: 'Right Hand Photo', orderKey: 'rightHandImages', column: 'right_hand_images', heading: 'Right Hand Photos' },
+  { field: 'inspiration', slug: 'inspiration', label: 'Inspiration Photo', orderKey: 'inspirationImages', column: 'inspiration_images', heading: 'Inspiration / Reference Photos' },
+];
+
 function hasPersistentOrderStore() {
   if (process.env.POSTGRES_URL) return true;
 
@@ -61,29 +72,26 @@ function normaliseFields(fields = {}) {
   return normalised;
 }
 
-function getOrderImageFiles(files = {}) {
-  const candidates = ['leftHand', 'rightHand', 'inspiration', 'images', 'image', 'photos', 'photo'];
-  const collected = [];
-  candidates.forEach((name) => {
-    const match = files[name];
-    if (!match) return;
-    const list = Array.isArray(match) ? match : [match];
-    list.forEach((file) => {
-      if (file && file.filepath) collected.push(file);
-    });
-  });
-  return collected;
+// Strict per-field extraction — deliberately does NOT fall back to generic
+// names like "images"/"photo" the way the old single-bucket version did,
+// so a left-hand photo can never accidentally end up mixed into another
+// category just because of how a field happened to be named.
+function getFilesForField(files = {}, fieldName) {
+  const match = files[fieldName];
+  if (!match) return [];
+  const list = Array.isArray(match) ? match : [match];
+  return list.filter((file) => file && file.filepath);
 }
 
-function validateImageFile(file, index) {
+function validateImageFile(file, label) {
   if (!file || !file.filepath) {
-    const error = new Error(`Inspiration image ${index + 1} is missing from the upload.`);
+    const error = new Error(`${label} is missing from the upload.`);
     error.code = 'VALIDATION_ERROR';
     throw error;
   }
 
   const mimeType = (file.mimetype || file.type || '').toLowerCase();
-  const filename = String(file.originalFilename || file.newFilename || `image-${index + 1}`);
+  const filename = String(file.originalFilename || file.newFilename || label);
   const extMatches = /\.(jpe?g|png|webp)$/i.test(filename);
 
   if (!ORDER_IMAGE_MIME_TYPES.has(mimeType) && !extMatches) {
@@ -118,23 +126,24 @@ async function parseOrderMultipart(req) {
   });
 }
 
-function buildImageLabel(index, fallback) {
-  return fallback ? `${fallback} ${index + 1}` : `Inspiration Image ${index + 1}`;
-}
-
-async function uploadOrderImages(cloudinary, files) {
+// Uploads one category's files into its own Cloudinary subfolder
+// (nailit_orders/<order-id>/<category-slug>) so the category survives in
+// Cloudinary too, not just in our own database.
+async function uploadOrderImageGroup(cloudinary, files, orderId, category) {
   if (!cloudinary || !files.length) return [];
 
   const uploads = [];
   for (let index = 0; index < files.length; index += 1) {
     const file = files[index];
-    validateImageFile(file, index);
+    const label = `${category.label} ${index + 1}`;
+    validateImageFile(file, label);
+
     const uploadResult = await cloudinary.uploader.upload(file.filepath, {
-      folder: 'nailit_orders',
+      folder: `nailit_orders/${orderId}/${category.slug}`,
       resource_type: 'image',
-      tags: ['customer_order'],
+      tags: ['customer_order', `order:${orderId}`, `category:${category.slug}`],
       transformation: [{ quality: 'auto', fetch_format: 'auto' }],
-      context: { order_image_label: buildImageLabel(index, 'Inspiration Image') },
+      context: { order_image_label: label, order_id: orderId, order_category: category.slug },
     });
 
     uploads.push({
@@ -143,7 +152,7 @@ async function uploadOrderImages(cloudinary, files) {
       url: uploadResult.secure_url,
       width: uploadResult.width,
       height: uploadResult.height,
-      label: buildImageLabel(index, 'Inspiration Image'),
+      label,
     });
   }
 
@@ -159,7 +168,30 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-function buildEmailHtml(order, images) {
+function emailImageSection(heading, images) {
+  if (!images.length) return '';
+
+  const imageMarkup = images.map((image) => `
+    <div style="margin-bottom:18px;">
+      <p style="margin:0 0 8px;font-weight:700;color:#5d2d49;">${escapeHtml(image.label)}</p>
+      <a href="${escapeHtml(image.url)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;max-width:100%;margin-bottom:10px;">
+        <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.label)}" style="max-width:220px;max-height:220px;border-radius:12px;border:1px solid #f1d9e7;background:#fff;display:block;" />
+      </a>
+      <div style="font-size:12px;color:#7d5b7b;">
+        <a href="${escapeHtml(image.url)}" target="_blank" rel="noopener noreferrer" style="color:#b30f65;">Open image</a>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <div style="margin-top:20px;">
+      <p style="margin:0 0 12px;font-weight:700;color:#5d2d49;">${escapeHtml(heading)}</p>
+      ${imageMarkup}
+    </div>
+  `;
+}
+
+function buildEmailHtml(order, imageGroups) {
   const rows = [
     ['Order ID', order.orderId],
     ['Customer name', order.customerName],
@@ -178,19 +210,11 @@ function buildEmailHtml(order, images) {
     </tr>
   `).join('');
 
-  const imageMarkup = images.length
-    ? images.map((image, index) => `
-        <div style="margin-bottom:18px;">
-          <p style="margin:0 0 8px;font-weight:700;color:#5d2d49;">${escapeHtml(image.label)}</p>
-          <a href="${escapeHtml(image.url)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;max-width:100%;margin-bottom:10px;">
-            <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.label)}" style="max-width:220px;max-height:220px;border-radius:12px;border:1px solid #f1d9e7;background:#fff;display:block;" />
-          </a>
-          <div style="font-size:12px;color:#7d5b7b;">
-            <a href="${escapeHtml(image.url)}" target="_blank" rel="noopener noreferrer" style="color:#b30f65;">Open image</a>
-          </div>
-        </div>
-      `).join('')
-    : '<p style="margin:0;color:#7d5b7b;">No inspiration images uploaded.</p>';
+  const imageSections = IMAGE_CATEGORIES
+    .map((category) => emailImageSection(category.heading, imageGroups[category.orderKey] || []))
+    .join('');
+
+  const hasAnyImages = IMAGE_CATEGORIES.some((category) => (imageGroups[category.orderKey] || []).length);
 
   return `
     <div style="font-family:Arial,sans-serif;color:#3b1b35;line-height:1.6;max-width:760px;margin:0 auto;">
@@ -203,16 +227,13 @@ function buildEmailHtml(order, images) {
           ${rows}
         </table>
 
-        <div style="margin-top:24px;">
-          <p style="margin:0 0 12px;font-weight:700;color:#5d2d49;">Uploaded inspiration/reference images</p>
-          ${imageMarkup}
-        </div>
+        ${hasAnyImages ? imageSections : '<p style="margin:20px 0 0;color:#7d5b7b;">No photos were uploaded with this order.</p>'}
       </div>
     </div>
   `;
 }
 
-function buildPlainText(order, images) {
+function buildPlainText(order, imageGroups) {
   const lines = [
     `Order ID: ${order.orderId}`,
     `Customer name: ${order.customerName}`,
@@ -224,23 +245,28 @@ function buildPlainText(order, images) {
     `Shape: ${order.shape || '—'}`,
     `Length: ${order.length || '—'}`,
     `Notes: ${order.notes || '—'}`,
-    '',
-    'Uploaded inspiration/reference images:',
   ];
 
-  if (images.length) {
-    images.forEach((image, index) => {
-      lines.push(`${index + 1}. ${image.label}: ${image.url}`);
-    });
+  const hasAnyImages = IMAGE_CATEGORIES.some((category) => (imageGroups[category.orderKey] || []).length);
+
+  if (!hasAnyImages) {
+    lines.push('', 'No photos were uploaded with this order.');
   } else {
-    lines.push('No inspiration images uploaded.');
+    IMAGE_CATEGORIES.forEach((category) => {
+      const images = imageGroups[category.orderKey] || [];
+      if (!images.length) return;
+      lines.push('', `${category.heading}:`);
+      images.forEach((image, index) => {
+        lines.push(`${index + 1}. ${image.label}: ${image.url}`);
+      });
+    });
   }
 
   lines.push('', 'Admin dashboard: /admin → Orders');
   return lines.join('\n');
 }
 
-async function sendOrderEmail(order, images) {
+async function sendOrderEmail(order, imageGroups) {
   const to = process.env.EMAIL_TO || process.env.ADMIN_EMAIL || 'nailitbyk28@gmail.com';
   const user = process.env.EMAIL_USER || process.env.GMAIL_USER || 'nailitbyk28@gmail.com';
   const pass = process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
@@ -260,13 +286,24 @@ async function sendOrderEmail(order, images) {
     from: process.env.EMAIL_FROM || `Nail It By K <${user}>`,
     to,
     subject: `New Nail Order Request - ${order.orderId}`,
-    text: buildPlainText(order, images),
-    html: buildEmailHtml(order, images),
+    text: buildPlainText(order, imageGroups),
+    html: buildEmailHtml(order, imageGroups),
   });
 
   return info;
 }
 
+function toImageArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+// Reads each category from wherever it lives: a dedicated Postgres column
+// (left_hand_images, ...) if present, else the mirrored copy inside the
+// `data` JSONB blob (used for the in-memory fallback store, and as a
+// belt-and-suspenders copy alongside the dedicated columns). If NONE of the
+// three categories have anything AND the order still only has the old
+// pre-migration `images` array, that array is surfaced separately as
+// `legacyImages` — never guessed into left/right/inspiration.
 function mapPersistedOrder(record) {
   const data = record?.data || {};
   const form = data.form || {};
@@ -278,7 +315,15 @@ function mapPersistedOrder(record) {
   const design = sanitizePlainText(record?.design || form.design || form.category || '', 160);
   const shape = sanitizePlainText(record?.shape || form.shape || '', 80);
   const length = sanitizePlainText(record?.length || form.length || '', 80);
-  const images = Array.isArray(record?.images) ? record.images : (Array.isArray(data.images) ? data.images : []);
+
+  const leftHandImages = toImageArray(record?.left_hand_images ?? data.leftHandImages);
+  const rightHandImages = toImageArray(record?.right_hand_images ?? data.rightHandImages);
+  const inspirationImages = toImageArray(record?.inspiration_images ?? data.inspirationImages);
+  const hasCategorizedImages = leftHandImages.length || rightHandImages.length || inspirationImages.length;
+
+  // Pre-migration orders only ever had a flat `images` array inside `data`.
+  const legacyImages = hasCategorizedImages ? [] : toImageArray(record?.images ?? data.images);
+  const imageCount = leftHandImages.length + rightHandImages.length + inspirationImages.length + legacyImages.length;
 
   return {
     id: record?.id || record?.order_id || '',
@@ -293,13 +338,18 @@ function mapPersistedOrder(record) {
     length,
     status: record?.status || 'New',
     submittedAt: record?.created_at || record?.submittedAt || new Date().toISOString(),
-    imageCount: Array.isArray(images) ? images.length : 0,
-    images,
+    imageCount,
+    leftHandImages,
+    rightHandImages,
+    inspirationImages,
+    legacyImages,
     details: form,
   };
 }
 
 async function saveOrderToStore(order) {
+  const imageCount = IMAGE_CATEGORIES.reduce((sum, category) => sum + (order[category.orderKey] || []).length, 0);
+
   const record = {
     id: order.id,
     order_id: order.orderId,
@@ -312,7 +362,10 @@ async function saveOrderToStore(order) {
     design: order.design,
     shape: order.shape,
     length: order.length,
-    image_count: order.images.length,
+    image_count: imageCount,
+    left_hand_images: order.leftHandImages || [],
+    right_hand_images: order.rightHandImages || [],
+    inspiration_images: order.inspirationImages || [],
     created_at: order.submittedAt,
     data: {
       orderId: order.orderId,
@@ -325,7 +378,9 @@ async function saveOrderToStore(order) {
       shape: order.shape,
       length: order.length,
       form: order.details,
-      images: order.images,
+      leftHandImages: order.leftHandImages || [],
+      rightHandImages: order.rightHandImages || [],
+      inspirationImages: order.inspirationImages || [],
     },
   };
 
@@ -348,6 +403,9 @@ async function saveOrderToStore(order) {
       shape,
       length,
       image_count,
+      left_hand_images,
+      right_hand_images,
+      inspiration_images,
       created_at,
       data
     ) VALUES (
@@ -363,6 +421,9 @@ async function saveOrderToStore(order) {
       ${record.shape},
       ${record.length},
       ${record.image_count},
+      ${JSON.stringify(record.left_hand_images)}::jsonb,
+      ${JSON.stringify(record.right_hand_images)}::jsonb,
+      ${JSON.stringify(record.inspiration_images)}::jsonb,
       ${record.created_at},
       ${JSON.stringify(record.data)}::jsonb
     )
@@ -377,6 +438,9 @@ async function saveOrderToStore(order) {
       shape = EXCLUDED.shape,
       length = EXCLUDED.length,
       image_count = EXCLUDED.image_count,
+      left_hand_images = EXCLUDED.left_hand_images,
+      right_hand_images = EXCLUDED.right_hand_images,
+      inspiration_images = EXCLUDED.inspiration_images,
       data = EXCLUDED.data,
       last_updated = NOW()
   `;
@@ -414,6 +478,9 @@ async function ensureOrdersTable() {
     )
   `;
 
+  // Safe to run on every deploy: IF NOT EXISTS means this never touches
+  // existing rows or columns, so pre-migration orders (and their old flat
+  // `data.images` array) are left exactly as they were.
   await sql`
     ALTER TABLE orders
     ADD COLUMN IF NOT EXISTS delivery TEXT,
@@ -423,10 +490,35 @@ async function ensureOrdersTable() {
     ADD COLUMN IF NOT EXISTS length TEXT,
     ADD COLUMN IF NOT EXISTS image_count INTEGER DEFAULT 0,
     ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS last_updated TIMESTAMPTZ DEFAULT NOW()
+    ADD COLUMN IF NOT EXISTS last_updated TIMESTAMPTZ DEFAULT NOW(),
+    ADD COLUMN IF NOT EXISTS left_hand_images JSONB NOT NULL DEFAULT '[]'::jsonb,
+    ADD COLUMN IF NOT EXISTS right_hand_images JSONB NOT NULL DEFAULT '[]'::jsonb,
+    ADD COLUMN IF NOT EXISTS inspiration_images JSONB NOT NULL DEFAULT '[]'::jsonb
   `;
 
   ordersTableEnsured = true;
+}
+
+function rowFromDbRecord(row) {
+  return {
+    id: row.id,
+    order_id: row.order_id,
+    customer_name: row.customer_name,
+    email: row.email,
+    phone: row.phone,
+    status: row.status || 'New',
+    delivery: row.delivery,
+    notes: row.notes,
+    design: row.design,
+    shape: row.shape,
+    length: row.length,
+    image_count: Number(row.image_count || 0),
+    left_hand_images: row.left_hand_images,
+    right_hand_images: row.right_hand_images,
+    inspiration_images: row.inspiration_images,
+    created_at: row.created_at,
+    data: row.data || {},
+  };
 }
 
 async function listOrdersFromStore({ status = 'all', search = '', sort = 'newest' } = {}) {
@@ -434,39 +526,9 @@ async function listOrdersFromStore({ status = 'all', search = '', sort = 'newest
 
   if (hasPersistentOrderStore()) {
     const result = await sql`SELECT * FROM orders WHERE archived = false ORDER BY created_at DESC`;
-    rows = (result.rows || []).map((row) => ({
-      id: row.id,
-      order_id: row.order_id,
-      customer_name: row.customer_name,
-      email: row.email,
-      phone: row.phone,
-      status: row.status || 'New',
-      delivery: row.delivery,
-      notes: row.notes,
-      design: row.design,
-      shape: row.shape,
-      length: row.length,
-      image_count: Number(row.image_count || 0),
-      created_at: row.created_at,
-      data: row.data || {},
-    }));
+    rows = (result.rows || []).map(rowFromDbRecord);
   } else {
-    rows = MEMORY_STORE.filter((row) => !row.archived).map((row) => ({
-      id: row.id,
-      order_id: row.order_id,
-      customer_name: row.customer_name,
-      email: row.email,
-      phone: row.phone,
-      status: row.status || 'New',
-      delivery: row.delivery,
-      notes: row.notes,
-      design: row.design,
-      shape: row.shape,
-      length: row.length,
-      image_count: Number(row.image_count || 0),
-      created_at: row.created_at,
-      data: row.data || {},
-    }));
+    rows = MEMORY_STORE.filter((row) => !row.archived).map(rowFromDbRecord);
   }
 
   const filtered = rows.filter((row) => {
@@ -534,7 +596,7 @@ async function submitOrderFromRequest(req, cloudinary) {
   await ensureOrdersTable();
 
   const { fields, files } = await parseOrderMultipart(req);
-  const imageFiles = getOrderImageFiles(files);
+
   const customerName = sanitizePlainText(fields.name || fields.customerName || fields.fullName || '', 160);
   const email = sanitizePlainText(fields.email || '', 160);
   const phone = sanitizePlainText(fields.phone || '', 120);
@@ -557,16 +619,28 @@ async function submitOrderFromRequest(req, cloudinary) {
     throw error;
   }
 
-  if (imageFiles.length > MAX_IMAGE_COUNT) {
+  const filesByCategory = IMAGE_CATEGORIES.map((category) => ({
+    category,
+    files: getFilesForField(files, category.field),
+  }));
+
+  const totalFileCount = filesByCategory.reduce((sum, entry) => sum + entry.files.length, 0);
+  if (totalFileCount > MAX_IMAGE_COUNT) {
     const error = new Error(`You can upload up to ${MAX_IMAGE_COUNT} images per order.`);
     error.code = 'VALIDATION_ERROR';
     throw error;
   }
 
-  const uploadedImages = await uploadOrderImages(cloudinary, imageFiles);
-
   const orderId = createOrderId();
   const submittedAt = new Date().toISOString();
+
+  const uploadedByCategory = {};
+  for (const entry of filesByCategory) {
+    uploadedByCategory[entry.category.orderKey] = await uploadOrderImageGroup(cloudinary, entry.files, orderId, entry.category);
+  }
+
+  const totalUploadedCount = IMAGE_CATEGORIES.reduce((sum, category) => sum + uploadedByCategory[category.orderKey].length, 0);
+
   const order = {
     id: orderId,
     orderId,
@@ -580,15 +654,12 @@ async function submitOrderFromRequest(req, cloudinary) {
     length,
     status: 'New',
     submittedAt,
-    images: uploadedImages.map((image) => ({
-      label: image.label,
-      url: image.url,
-      publicId: image.publicId,
-      originalName: image.originalName,
-    })),
+    leftHandImages: uploadedByCategory.leftHandImages,
+    rightHandImages: uploadedByCategory.rightHandImages,
+    inspirationImages: uploadedByCategory.inspirationImages,
     details: {
       ...fields,
-      inspirationImageCount: uploadedImages.length,
+      totalImageCount: totalUploadedCount,
       customerName,
       email,
       phone,
@@ -611,7 +682,11 @@ async function submitOrderFromRequest(req, cloudinary) {
   // we still report success and just note that the email didn't go out.
   let emailWarning = null;
   try {
-    await sendOrderEmail(order, order.images);
+    await sendOrderEmail(order, {
+      leftHandImages: order.leftHandImages,
+      rightHandImages: order.rightHandImages,
+      inspirationImages: order.inspirationImages,
+    });
   } catch (emailError) {
     console.error('[orders] confirmation email failed', { orderId, error: emailError?.message });
     emailWarning = 'Your order was saved, but the confirmation email could not be sent. Our team can still see it in the admin dashboard.';
@@ -631,7 +706,10 @@ async function submitOrderFromRequest(req, cloudinary) {
       phone,
       status: 'New',
       created_at: submittedAt,
-      data: { form: order.details, images: order.images },
+      left_hand_images: order.leftHandImages,
+      right_hand_images: order.rightHandImages,
+      inspiration_images: order.inspirationImages,
+      data: { form: order.details },
     }),
   };
 }
@@ -640,6 +718,7 @@ module.exports = {
   ORDER_STATUSES,
   MAX_IMAGE_SIZE_BYTES,
   MAX_IMAGE_COUNT,
+  IMAGE_CATEGORIES,
   sanitizeText,
   sanitizePlainText,
   ensureOrdersTable,

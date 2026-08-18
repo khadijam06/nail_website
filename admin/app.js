@@ -374,6 +374,46 @@ async function mountSection(key) {
   contentAreaEl.innerHTML = '<div class="status error">This section is not available yet.</div>';
 }
 
+// Lightweight click-to-enlarge lightbox for order photos. Created once and
+// reused (rather than rebuilt per render) so repeated order clicks don't
+// pile up duplicate overlay elements or event listeners.
+let orderLightboxEl = null;
+
+function ensureOrderLightbox() {
+  if (orderLightboxEl) return orderLightboxEl;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'order-lightbox';
+  overlay.innerHTML = `
+    <div class="order-lightbox-backdrop"></div>
+    <div class="order-lightbox-panel">
+      <button type="button" class="order-lightbox-close" aria-label="Close">×</button>
+      <img class="order-lightbox-img" src="" alt="">
+      <div class="order-lightbox-caption"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.classList.remove('open');
+  overlay.querySelector('.order-lightbox-backdrop').addEventListener('click', close);
+  overlay.querySelector('.order-lightbox-close').addEventListener('click', close);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') close();
+  });
+
+  orderLightboxEl = overlay;
+  return overlay;
+}
+
+function openOrderLightbox(src, alt) {
+  if (!src) return;
+  const overlay = ensureOrderLightbox();
+  overlay.querySelector('.order-lightbox-img').src = src;
+  overlay.querySelector('.order-lightbox-img').alt = alt || '';
+  overlay.querySelector('.order-lightbox-caption').textContent = alt || '';
+  overlay.classList.add('open');
+}
+
 async function renderOrdersPanel(container) {
   container.innerHTML = `
     <div class="card">
@@ -416,19 +456,36 @@ async function renderOrdersPanel(container) {
     return `<span class="${className}">${safeStatus}</span>`;
   }
 
+  // One category = one clearly-labeled section; a category with no photos
+  // renders nothing at all rather than an empty box.
+  function imageCategorySectionHtml(heading, images) {
+    if (!images || !images.length) return '';
+    return `
+      <div class="detail-panel order-image-section">
+        <div class="detail-header">${escapeHtml(heading)}</div>
+        <div class="order-detail-images">
+          ${images.map((image) => `
+            <button type="button" class="order-image-link" data-lightbox-src="${escapeHtml(image.url)}" data-lightbox-alt="${escapeHtml(image.label || heading)}">
+              <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.label || heading)}" loading="lazy">
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   function renderOrderDetail(order) {
     if (!order) {
       ordersDetailWrap.innerHTML = '<p class="muted">Select an order to view the full details.</p>';
       return;
     }
 
-    const imageMarkup = (order.images || []).length
-      ? `<div class="order-detail-images">${(order.images || []).map((image) => `
-          <a class="order-image-link" href="${escapeHtml(image.url)}" target="_blank" rel="noopener noreferrer">
-            <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.label || 'Order inspiration')}" />
-          </a>
-        `).join('')}</div>`
-      : '<p class="muted">No inspiration images uploaded.</p>';
+    const imageSectionsHtml = [
+      imageCategorySectionHtml('Left Hand Photos', order.leftHandImages),
+      imageCategorySectionHtml('Right Hand Photos', order.rightHandImages),
+      imageCategorySectionHtml('Inspiration / Reference Photos', order.inspirationImages),
+      imageCategorySectionHtml('Uncategorized / Legacy Images', order.legacyImages),
+    ].join('') || '<div class="detail-panel"><p class="muted">No photos were uploaded with this order.</p></div>';
 
     const detail = order.details || {};
     const lines = [
@@ -466,16 +523,21 @@ async function renderOrdersPanel(container) {
               <div><strong>Order ID:</strong> ${escapeHtml(order.orderId || order.id || '')}</div>
               <div><strong>Date:</strong> ${escapeHtml(order.submittedAt ? new Date(order.submittedAt).toLocaleString() : '—')}</div>
               <div><strong>Status:</strong> ${renderStatusBadge(order.status || 'New')}</div>
-              <div><strong>Images:</strong> ${escapeHtml(String(order.imageCount || (order.images || []).length || 0))}</div>
+              <div><strong>Images:</strong> ${escapeHtml(String(order.imageCount ?? 0))}</div>
             </div>
           </div>
         </div>
-        <div class="detail-panel" style="margin-top:14px;">
-          <div class="detail-header">Inspiration / reference pictures</div>
-          ${imageMarkup}
+        <div class="order-image-sections">
+          ${imageSectionsHtml}
         </div>
       </div>
     `;
+
+    ordersDetailWrap.querySelectorAll('[data-lightbox-src]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        openOrderLightbox(btn.getAttribute('data-lightbox-src'), btn.getAttribute('data-lightbox-alt'));
+      });
+    });
 
     const statusSelect = ordersDetailWrap.querySelector('#orderStatusSelect');
     statusSelect.addEventListener('change', async () => {
@@ -539,7 +601,7 @@ async function renderOrdersPanel(container) {
               <span>${escapeHtml(order.submittedAt ? new Date(order.submittedAt).toLocaleString() : '—')}</span>
               <span>${escapeHtml(order.phone || '—')}</span>
               <span>${renderStatusBadge(order.status || 'New')}</span>
-              <span>${escapeHtml(String(order.imageCount || (order.images || []).length || 0))}</span>
+              <span>${escapeHtml(String(order.imageCount ?? 0))}</span>
             </button>
           `).join('')}
         </div>

@@ -105,9 +105,59 @@ textarea { min-height: 90px; resize: vertical; }
 .detail-header { font-size: 12px; color: var(--muted); font-weight: 800; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 10px; }
 .detail-list { display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
 .order-detail-actions { display: flex; align-items: center; gap: 10px; }
+.order-image-sections { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.order-image-section { margin-top: 0; }
 .order-detail-images { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 12px; }
-.order-image-link { display: block; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+.order-image-link {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  padding: 0;
+  cursor: pointer;
+}
 .order-image-link img { display: block; width: 100%; height: 140px; object-fit: cover; }
+.order-image-link:hover { border-color: var(--accent); }
+
+.order-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+.order-lightbox.open { display: flex; }
+.order-lightbox-backdrop { position: absolute; inset: 0; background: rgba(20, 8, 17, .78); }
+.order-lightbox-panel {
+  position: relative;
+  z-index: 1;
+  max-width: min(90vw, 900px);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.order-lightbox-img { display: block; max-width: 100%; max-height: 78vh; border-radius: 14px; box-shadow: 0 24px 70px rgba(0, 0, 0, .4); }
+.order-lightbox-caption { color: #fff; font-size: 13px; text-align: center; }
+.order-lightbox-close {
+  position: absolute;
+  top: -18px;
+  right: -18px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: none;
+  background: #fff;
+  color: var(--text);
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .25);
+}
 
 .actions { display: flex; flex-wrap: wrap; gap: 6px; }
 
@@ -319,4 +369,5 @@ textarea { min-height: 90px; resize: vertical; }
   .orders-head { display: none; }
   .orders-row { grid-template-columns: 1fr; gap: 4px; }
   .order-detail-grid { grid-template-columns: 1fr; }
+  .order-lightbox-close { top: -14px; right: 0; }
 }
