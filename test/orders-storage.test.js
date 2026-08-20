@@ -112,6 +112,53 @@ test('mapPersistedOrder routes pre-migration orders (flat images array) into leg
   assert.equal(legacyOrder.imageCount, 2);
 });
 
+test('sendOrderEmailConfig reads the exact EMAIL_USER/EMAIL_PASS/EMAIL_TO names and strips spaces from the app password', () => {
+  const keys = ['EMAIL_USER', 'EMAIL_PASS', 'EMAIL_TO', 'GMAIL_USER', 'GMAIL_APP_PASSWORD', 'ADMIN_EMAIL'];
+  const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  keys.forEach((key) => delete process.env[key]);
+
+  process.env.EMAIL_USER = 'shop@example.com';
+  // Google displays app passwords in 4-char groups; simulate a verbatim copy-paste.
+  process.env.EMAIL_PASS = 'abcd efgh ijkl mnop';
+  process.env.EMAIL_TO = 'orders@example.com';
+
+  try {
+    const { sendOrderEmailConfig } = require('../server/orders');
+    const config = sendOrderEmailConfig();
+    assert.equal(config.user, 'shop@example.com');
+    assert.equal(config.to, 'orders@example.com');
+    assert.equal(config.pass, 'abcdefghijklmnop');
+    assert.equal(config.pass.length, 16);
+  } finally {
+    keys.forEach((key) => restoreEnvironment(key, previous[key]));
+  }
+});
+
+test('sendOrderEmailConfig never silently substitutes a hardcoded email when EMAIL_USER/EMAIL_TO are unset', () => {
+  const keys = ['EMAIL_USER', 'EMAIL_PASS', 'EMAIL_TO', 'GMAIL_USER', 'GMAIL_APP_PASSWORD', 'ADMIN_EMAIL'];
+  const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  keys.forEach((key) => delete process.env[key]);
+
+  try {
+    const { sendOrderEmailConfig } = require('../server/orders');
+    const config = sendOrderEmailConfig();
+    // Must come back empty, not a hardcoded fallback address — a hardcoded
+    // fallback would silently try to authenticate as the wrong account.
+    assert.equal(config.user, '');
+    assert.equal(config.to, '');
+  } finally {
+    keys.forEach((key) => restoreEnvironment(key, previous[key]));
+  }
+});
+
+test('normalizeAppPassword strips all whitespace regardless of position', () => {
+  const { normalizeAppPassword } = require('../server/orders');
+  assert.equal(normalizeAppPassword('abcd efgh ijkl mnop'), 'abcdefghijklmnop');
+  assert.equal(normalizeAppPassword('  abcdefghijklmnop  '), 'abcdefghijklmnop');
+  assert.equal(normalizeAppPassword(''), '');
+  assert.equal(normalizeAppPassword(undefined), '');
+});
+
 test('mapPersistedOrder never crashes on an order with no images at all', () => {
   const { mapPersistedOrder } = require('../server/orders');
 

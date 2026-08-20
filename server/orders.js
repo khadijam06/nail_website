@@ -266,13 +266,42 @@ function buildPlainText(order, imageGroups) {
   return lines.join('\n');
 }
 
-async function sendOrderEmail(order, imageGroups) {
-  const to = process.env.EMAIL_TO || process.env.ADMIN_EMAIL || 'nailitbyk28@gmail.com';
-  const user = process.env.EMAIL_USER || process.env.GMAIL_USER || 'nailitbyk28@gmail.com';
-  const pass = process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
+// Google displays App Passwords in 4-character groups for readability
+// ("abcd efgh ijkl mnop"); pasted verbatim into an env var, those spaces
+// become part of the literal password nodemailer sends, and Gmail rejects
+// it. App Passwords are always exactly 16 characters with no separators, so
+// stripping all whitespace is always safe, never ambiguous.
+function normalizeAppPassword(value) {
+  return String(value || '').replace(/\s+/g, '');
+}
 
-  if (!user || !pass) {
-    const error = new Error('Email delivery is not configured. Missing EMAIL_USER/EMAIL_PASS environment variables.');
+function sendOrderEmailConfig() {
+  // No hardcoded literal fallback for user/to: silently substituting a
+  // different address when the real env var isn't visible (e.g. only
+  // scoped to Production, not Preview, in Vercel) would attempt to log in
+  // as the WRONG account while still using a real EMAIL_PASS — that's a
+  // guaranteed, hard-to-diagnose auth failure. Missing config should throw
+  // loudly instead of silently mismatching.
+  const to = (process.env.EMAIL_TO || process.env.ADMIN_EMAIL || '').trim();
+  const user = (process.env.EMAIL_USER || process.env.GMAIL_USER || '').trim();
+  const pass = normalizeAppPassword(process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD);
+
+  return { to, user, pass };
+}
+
+async function sendOrderEmail(order, imageGroups) {
+  const { to, user, pass } = sendOrderEmailConfig();
+
+  // Safe by design: booleans only, never the values themselves or their length.
+  console.log('[orders] email env check', {
+    hasEmailUser: Boolean(user),
+    hasEmailPass: Boolean(pass),
+    hasEmailTo: Boolean(to),
+  });
+
+  if (!user || !pass || !to) {
+    const missing = [!user && 'EMAIL_USER', !pass && 'EMAIL_PASS', !to && 'EMAIL_TO'].filter(Boolean).join(', ');
+    const error = new Error(`Email delivery is not configured. Missing or empty: ${missing}.`);
     error.code = 'EMAIL_CONFIGURATION_ERROR';
     throw error;
   }
@@ -688,7 +717,17 @@ async function submitOrderFromRequest(req, cloudinary) {
       inspirationImages: order.inspirationImages,
     });
   } catch (emailError) {
-    console.error('[orders] confirmation email failed', { orderId, error: emailError?.message });
+    // Nodemailer/SMTP diagnostic fields only — never the credentials used to
+    // authenticate. For Gmail, error.message/response on an auth failure is
+    // itself just a generic SMTP response line (e.g. "Invalid login:
+    // 535-5.7.8 Username and Password not accepted"), not a secret.
+    console.error('[orders] confirmation email failed', {
+      orderId,
+      code: emailError?.code,
+      responseCode: emailError?.responseCode,
+      command: emailError?.command,
+      message: emailError?.message,
+    });
     emailWarning = 'Your order was saved, but the confirmation email could not be sent. Our team can still see it in the admin dashboard.';
   }
 
@@ -728,4 +767,6 @@ module.exports = {
   archiveOrder,
   submitOrderFromRequest,
   mapPersistedOrder,
+  normalizeAppPassword,
+  sendOrderEmailConfig,
 };
