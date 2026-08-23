@@ -1,4 +1,14 @@
+// Every response from this codebase's API is either authenticated admin
+// data or a listing that must reflect the current DB/CMS state immediately
+// (orders, products, content) — none of it should ever be cached by a
+// browser, a proxy, or Vercel's edge network. Setting this here, once,
+// covers the whole API surface instead of relying on every route to
+// remember it individually.
 function sendJson(res, statusCode, payload) {
+  if (typeof res.setHeader === 'function') {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  }
+
   if (typeof res.status === 'function') {
     return res.status(statusCode).json(payload);
   }

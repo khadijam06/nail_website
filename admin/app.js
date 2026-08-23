@@ -77,6 +77,12 @@ let currentKey = '';
 let currentFamily = '';
 let currentController = null;
 let orderBadgeCount = 0;
+// Set by any section that supports a manual refresh (currently just
+// Orders) so re-clicking its already-active sidebar item does something
+// instead of being a same-key no-op. Cleared whenever a different section
+// mounts. Deliberately not a timer/interval — refresh is always explicit
+// (button click, filter change, or re-clicking the nav item), never polled.
+let activeSectionRefresh = null;
 
 function showToast(message, type = 'info') {
   if (!toastEl) return;
@@ -321,6 +327,7 @@ async function mountSection(key) {
   // contentAreaEl), since it needs to float above whichever category page
   // opened it — close it on any navigation so it can't get orphaned.
   closeProductModal();
+  activeSectionRefresh = null;
 
   if (item.kind === 'live' && item.family === 'homepage-live') {
     if (currentFamily !== 'homepage-live') {
@@ -419,6 +426,7 @@ async function renderOrdersPanel(container) {
     <div class="card">
       <div class="section-title">
         <h2>Orders</h2>
+        <button class="btn btn-secondary" type="button" id="ordersRefreshBtn">Refresh</button>
       </div>
       <div class="orders-toolbar">
         <input id="ordersSearch" type="search" placeholder="Search by customer, phone, order ID..." aria-label="Search orders">
@@ -629,13 +637,28 @@ async function renderOrdersPanel(container) {
   searchInput.addEventListener('input', () => loadOrders());
   statusFilter.addEventListener('change', () => loadOrders());
   sortSelect.addEventListener('change', () => loadOrders());
+  container.querySelector('#ordersRefreshBtn').addEventListener('click', () => loadOrders());
+
+  // Lets the sidebar re-fetch when "Orders" is clicked while already the
+  // active section (see navigateTo) — otherwise there is no way to see a
+  // newly-submitted order without changing a filter or leaving the page.
+  activeSectionRefresh = loadOrders;
 
   await loadOrders();
 }
 
 function navigateTo(key) {
   const item = NAV_ITEMS_BY_KEY.get(key);
-  if (!item || key === currentKey) return;
+  if (!item) return;
+
+  if (key === currentKey) {
+    // Re-clicking the already-active section: nothing to (re)mount, but if
+    // it supports a manual refresh (Orders), do that instead of no-op'ing —
+    // otherwise a newly-submitted order stays invisible until you leave and
+    // come back, or hit its own Refresh button.
+    activeSectionRefresh?.();
+    return;
+  }
 
   const isSameFamily = Boolean(item.family) && item.family === currentFamily;
   if (!isSameFamily && !confirmDiscardIfDirty()) return;

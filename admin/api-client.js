@@ -51,7 +51,10 @@ export function formatApiError(data, fallback) {
 }
 
 export async function requestJson(url, options = {}) {
-  const res = await fetch(url, options);
+  // Admin data must never be served stale from the browser's HTTP cache or
+  // back-forward cache — every admin view (orders especially) needs to
+  // reflect what's in the database right now, not whatever was last fetched.
+  const res = await fetch(url, { cache: 'no-store', ...options });
   const raw = await res.text();
   let data = {};
   if (raw) {
