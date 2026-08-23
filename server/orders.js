@@ -20,16 +20,48 @@ const IMAGE_CATEGORIES = [
   { field: 'inspiration', slug: 'inspiration', label: 'Inspiration Photo', orderKey: 'inspirationImages', column: 'inspiration_images', heading: 'Inspiration / Reference Photos' },
 ];
 
+// Never fall back to the in-memory store on any real Vercel deployment —
+// Preview and Production must both have real persistence, or the request
+// fails loudly. The previous check only looked at NODE_ENV/VERCEL_ENV
+// === 'production', which does NOT cover Preview deployments (VERCEL_ENV
+// is 'preview' there) — meaning a misconfigured Preview could have silently
+// used memory (lost on every cold start) while still telling the customer
+// their order was saved. VERCEL is set to '1' on every Vercel deployment
+// (Production, Preview, and `vercel dev`) regardless of environment, so
+// checking it (alongside VERCEL_ENV) closes that gap; only genuinely local
+// `node`/`npm test` runs are allowed to use memory.
+function isRunningOnVercel() {
+  return Boolean(process.env.VERCEL) || Boolean(process.env.VERCEL_ENV);
+}
+
 function hasPersistentOrderStore() {
   if (process.env.POSTGRES_URL) return true;
 
-  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
-    const error = new Error('Persistent order storage is not configured. Set POSTGRES_URL before accepting production orders.');
+  if (isRunningOnVercel() || process.env.NODE_ENV === 'production') {
+    const error = new Error('Persistent order storage is not configured. Set POSTGRES_URL before accepting orders.');
     error.code = 'ORDER_STORAGE_CONFIGURATION_ERROR';
     throw error;
   }
 
   return false;
+}
+
+// Host + database name only — never the username or password portion of the
+// connection string. Lets us confirm in logs which physical database a
+// deployment is actually talking to without exposing a secret.
+function sanitizePostgresConnectionInfo() {
+  const url = process.env.POSTGRES_URL;
+  if (!url) return { host: null, database: null };
+
+  try {
+    const parsed = new URL(url);
+    return {
+      host: parsed.hostname || null,
+      database: (parsed.pathname || '').replace(/^\//, '') || null,
+    };
+  } catch {
+    return { host: null, database: null };
+  }
 }
 
 function sanitizeText(value, maxLength = 500) {
@@ -427,7 +459,14 @@ async function saveOrderToStore(order) {
     return { ...record, created_at: record.created_at || new Date().toISOString() };
   }
 
-  await sql`
+  console.log('[orders] insert starting', {
+    orderId: record.order_id,
+    ...sanitizePostgresConnectionInfo(),
+  });
+
+  let result;
+  try {
+    result = await sql`
     INSERT INTO orders (
       id,
       order_id,
@@ -481,7 +520,23 @@ async function saveOrderToStore(order) {
       inspiration_images = EXCLUDED.inspiration_images,
       data = EXCLUDED.data,
       last_updated = NOW()
+    RETURNING id, order_id, created_at
   `;
+  } catch (dbError) {
+    console.error('[orders] insert failed', {
+      orderId: record.order_id,
+      code: dbError?.code || null,
+      message: dbError?.message || null,
+    });
+    throw dbError;
+  }
+
+  const insertedRow = result?.rows?.[0] || null;
+  console.log('[orders] insert succeeded', {
+    orderId: insertedRow?.order_id || record.order_id,
+    insertedId: insertedRow?.id || null,
+    insertedCreatedAt: insertedRow?.created_at || null,
+  });
 
   return record;
 }
@@ -495,6 +550,21 @@ async function ensureOrdersTable() {
   if (!hasPersistentOrderStore()) return;
   if (ordersTableEnsured) return;
 
+  try {
+    await ensureOrdersTableDdl();
+    ordersTableEnsured = true;
+    console.log('[orders] ensureOrdersTable succeeded', sanitizePostgresConnectionInfo());
+  } catch (dbError) {
+    console.error('[orders] ensureOrdersTable failed', {
+      ...sanitizePostgresConnectionInfo(),
+      code: dbError?.code || null,
+      message: dbError?.message || null,
+    });
+    throw dbError;
+  }
+}
+
+async function ensureOrdersTableDdl() {
   await sql`
     CREATE TABLE IF NOT EXISTS orders (
       id TEXT PRIMARY KEY,
@@ -533,8 +603,6 @@ async function ensureOrdersTable() {
     ADD COLUMN IF NOT EXISTS right_hand_images JSONB NOT NULL DEFAULT '[]'::jsonb,
     ADD COLUMN IF NOT EXISTS inspiration_images JSONB NOT NULL DEFAULT '[]'::jsonb
   `;
-
-  ordersTableEnsured = true;
 }
 
 function rowFromDbRecord(row) {
@@ -672,6 +740,14 @@ async function submitOrderFromRequest(req, cloudinary) {
   const orderId = createOrderId();
   const submittedAt = new Date().toISOString();
 
+  console.log('[orders] submission diagnostics', {
+    orderId,
+    nodeEnv: process.env.NODE_ENV || null,
+    vercelEnv: process.env.VERCEL_ENV || null,
+    hasPostgresUrl: Boolean(process.env.POSTGRES_URL),
+    ...sanitizePostgresConnectionInfo(),
+  });
+
   const uploadedByCategory = {};
   for (const entry of filesByCategory) {
     uploadedByCategory[entry.category.orderKey] = await uploadOrderImageGroup(cloudinary, entry.files, orderId, entry.category);
@@ -789,4 +865,6 @@ module.exports = {
   normalizeAppPassword,
   sendOrderEmailConfig,
   isOrderEmailNotificationsEnabled,
+  isRunningOnVercel,
+  sanitizePostgresConnectionInfo,
 };

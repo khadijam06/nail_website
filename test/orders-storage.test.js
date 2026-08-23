@@ -9,10 +9,12 @@ function restoreEnvironment(name, value) {
 test('orders use memory only outside production when PostgreSQL is unavailable', async () => {
   const previousNodeEnv = process.env.NODE_ENV;
   const previousVercelEnv = process.env.VERCEL_ENV;
+  const previousVercel = process.env.VERCEL;
   const previousPostgresUrl = process.env.POSTGRES_URL;
   delete process.env.POSTGRES_URL;
   process.env.NODE_ENV = 'test';
   delete process.env.VERCEL_ENV;
+  delete process.env.VERCEL;
 
   try {
     const { ensureOrdersTable, listOrdersFromStore } = require('../server/orders');
@@ -21,6 +23,7 @@ test('orders use memory only outside production when PostgreSQL is unavailable',
   } finally {
     restoreEnvironment('NODE_ENV', previousNodeEnv);
     restoreEnvironment('VERCEL_ENV', previousVercelEnv);
+    restoreEnvironment('VERCEL', previousVercel);
     restoreEnvironment('POSTGRES_URL', previousPostgresUrl);
   }
 });
@@ -28,10 +31,12 @@ test('orders use memory only outside production when PostgreSQL is unavailable',
 test('orders reject volatile storage in production', async () => {
   const previousNodeEnv = process.env.NODE_ENV;
   const previousVercelEnv = process.env.VERCEL_ENV;
+  const previousVercel = process.env.VERCEL;
   const previousPostgresUrl = process.env.POSTGRES_URL;
   delete process.env.POSTGRES_URL;
   process.env.NODE_ENV = 'production';
   delete process.env.VERCEL_ENV;
+  delete process.env.VERCEL;
 
   try {
     const { ensureOrdersTable } = require('../server/orders');
@@ -42,6 +47,31 @@ test('orders reject volatile storage in production', async () => {
   } finally {
     restoreEnvironment('NODE_ENV', previousNodeEnv);
     restoreEnvironment('VERCEL_ENV', previousVercelEnv);
+    restoreEnvironment('VERCEL', previousVercel);
+    restoreEnvironment('POSTGRES_URL', previousPostgresUrl);
+  }
+});
+
+test('orders reject volatile storage on Vercel Preview (VERCEL_ENV=preview), not just Production', async () => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  const previousVercelEnv = process.env.VERCEL_ENV;
+  const previousVercel = process.env.VERCEL;
+  const previousPostgresUrl = process.env.POSTGRES_URL;
+  delete process.env.POSTGRES_URL;
+  process.env.NODE_ENV = 'production'; // Vercel's Node runtime sets this even for Preview builds
+  process.env.VERCEL_ENV = 'preview';
+  process.env.VERCEL = '1';
+
+  try {
+    const { ensureOrdersTable } = require('../server/orders');
+    await assert.rejects(
+      ensureOrdersTable(),
+      (error) => error?.code === 'ORDER_STORAGE_CONFIGURATION_ERROR',
+    );
+  } finally {
+    restoreEnvironment('NODE_ENV', previousNodeEnv);
+    restoreEnvironment('VERCEL_ENV', previousVercelEnv);
+    restoreEnvironment('VERCEL', previousVercel);
     restoreEnvironment('POSTGRES_URL', previousPostgresUrl);
   }
 });
