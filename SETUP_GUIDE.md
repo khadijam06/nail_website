@@ -78,10 +78,11 @@ The order form submits to `/api/orders`. Configure these environment variables i
 | `CLOUDINARY_CLOUD_NAME` | Yes | Cloudinary account name for uploaded order images. |
 | `CLOUDINARY_API_KEY` | Yes | Cloudinary API key. |
 | `CLOUDINARY_API_SECRET` | Yes | Cloudinary API secret. |
-| `EMAIL_USER` | Yes | Gmail address used to send order notifications. `GMAIL_USER` is also supported. |
-| `EMAIL_PASS` | Yes | Gmail app password. `GMAIL_APP_PASSWORD` is also supported. |
-| `EMAIL_TO` | Recommended | Inbox that receives order notifications. Defaults to the configured sender address. |
-| `EMAIL_FROM` | Optional | From address shown on notification emails. |
+| `ORDER_EMAIL_NOTIFICATIONS` | No | Set to exactly `true` to send a confirmation email on each order. Defaults to off — orders always save to Postgres and show in Admin -> Orders regardless of this setting; it only controls the optional email step. |
+| `EMAIL_USER` | Only if `ORDER_EMAIL_NOTIFICATIONS=true` | Gmail address used to send order notifications. `GMAIL_USER` is also supported. No hardcoded fallback — if this isn't set (or not visible in the current Vercel environment), sending is skipped with a logged reason rather than silently using the wrong account. |
+| `EMAIL_PASS` | Only if `ORDER_EMAIL_NOTIFICATIONS=true` | Gmail app password. `GMAIL_APP_PASSWORD` is also supported. Spaces are stripped automatically (Google displays app passwords as "abcd efgh ijkl mnop"). |
+| `EMAIL_TO` | Only if `ORDER_EMAIL_NOTIFICATIONS=true` | Inbox that receives order notifications. No hardcoded fallback. |
+| `EMAIL_FROM` | Optional | From address shown on notification emails. Defaults to the `EMAIL_USER` address, which is what Gmail expects. |
 | `ADMIN_PASSWORD` | Yes for admin access | Password for the admin dashboard. |
 | `ADMIN_JWT_SECRET` | Yes for admin access | Long random secret used to sign admin sessions. |
 

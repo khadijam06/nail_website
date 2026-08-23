@@ -275,6 +275,15 @@ function normalizeAppPassword(value) {
   return String(value || '').replace(/\s+/g, '');
 }
 
+// Opt-in, default off: order confirmation email is a nice-to-have, not part
+// of the order system itself, and leaving it on by default while Gmail
+// delivery isn't configured correctly just fills the logs with repeated
+// auth failures on every submission. Set ORDER_EMAIL_NOTIFICATIONS=true in
+// Vercel to turn it back on once Gmail is sorted out — no code change needed.
+function isOrderEmailNotificationsEnabled() {
+  return process.env.ORDER_EMAIL_NOTIFICATIONS === 'true';
+}
+
 function sendOrderEmailConfig() {
   // No hardcoded literal fallback for user/to: silently substituting a
   // different address when the real env var isn't visible (e.g. only
@@ -703,40 +712,50 @@ async function submitOrderFromRequest(req, cloudinary) {
   await saveOrderToStore(order);
 
   // The order is safely persisted at this point — it will already show up
-  // under Admin -> Orders regardless of what happens next. If the
-  // confirmation email fails (bad credentials, Gmail hiccup, etc.) we must
-  // NOT throw here: the client's error path tells the customer to retry,
-  // and retrying would create a second, duplicate order for the same
-  // request since order IDs are randomly generated, not idempotent. Instead
-  // we still report success and just note that the email didn't go out.
-  let emailWarning = null;
-  try {
-    await sendOrderEmail(order, {
-      leftHandImages: order.leftHandImages,
-      rightHandImages: order.rightHandImages,
-      inspirationImages: order.inspirationImages,
-    });
-  } catch (emailError) {
-    // Nodemailer/SMTP diagnostic fields only — never the credentials used to
-    // authenticate. For Gmail, error.message/response on an auth failure is
-    // itself just a generic SMTP response line (e.g. "Invalid login:
-    // 535-5.7.8 Username and Password not accepted"), not a secret.
-    console.error('[orders] confirmation email failed', {
-      orderId,
-      code: emailError?.code,
-      responseCode: emailError?.responseCode,
-      command: emailError?.command,
-      message: emailError?.message,
-    });
-    emailWarning = 'Your order was saved, but the confirmation email could not be sent. Our team can still see it in the admin dashboard.';
+  // under Admin -> Orders regardless of what happens next. Email is opt-in
+  // (default off) via ORDER_EMAIL_NOTIFICATIONS=true: Gmail delivery isn't
+  // configured correctly yet, and leaving it on by default just fills
+  // Vercel's logs with repeated auth failures on every order. The send
+  // logic itself (sendOrderEmail, buildEmailHtml/buildPlainText) is
+  // untouched so flipping that one env var re-enables it later without
+  // rebuilding anything. Either way — disabled, or enabled but failing —
+  // this must never throw: the client's error path would tell the customer
+  // to retry, and retrying would create a second, duplicate order since
+  // order IDs are randomly generated, not idempotent. The customer-facing
+  // message is always the plain success text regardless of email outcome.
+  let emailSent = false;
+
+  if (!isOrderEmailNotificationsEnabled()) {
+    console.log('[orders] email notifications disabled (set ORDER_EMAIL_NOTIFICATIONS=true to re-enable); skipping send', { orderId });
+  } else {
+    try {
+      await sendOrderEmail(order, {
+        leftHandImages: order.leftHandImages,
+        rightHandImages: order.rightHandImages,
+        inspirationImages: order.inspirationImages,
+      });
+      emailSent = true;
+    } catch (emailError) {
+      // Nodemailer/SMTP diagnostic fields only — never the credentials used
+      // to authenticate. For Gmail, error.message/response on an auth
+      // failure is itself just a generic SMTP response line (e.g. "Invalid
+      // login: 535-5.7.8 Username and Password not accepted"), not a secret.
+      console.error('[orders] confirmation email failed', {
+        orderId,
+        code: emailError?.code,
+        responseCode: emailError?.responseCode,
+        command: emailError?.command,
+        message: emailError?.message,
+      });
+    }
   }
 
   return {
     success: true,
     orderId,
     status: 'New',
-    message: emailWarning || `Your order has been submitted successfully. Order reference: ${orderId}`,
-    emailWarning,
+    message: `Your order has been submitted successfully. Order reference: ${orderId}`,
+    emailSent,
     order: mapPersistedOrder({
       id: orderId,
       order_id: orderId,
@@ -769,4 +788,5 @@ module.exports = {
   mapPersistedOrder,
   normalizeAppPassword,
   sendOrderEmailConfig,
+  isOrderEmailNotificationsEnabled,
 };

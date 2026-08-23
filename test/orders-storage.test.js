@@ -159,6 +159,37 @@ test('normalizeAppPassword strips all whitespace regardless of position', () => 
   assert.equal(normalizeAppPassword(undefined), '');
 });
 
+test('order email notifications default to disabled', () => {
+  const previous = process.env.ORDER_EMAIL_NOTIFICATIONS;
+  delete process.env.ORDER_EMAIL_NOTIFICATIONS;
+
+  try {
+    const { isOrderEmailNotificationsEnabled } = require('../server/orders');
+    assert.equal(isOrderEmailNotificationsEnabled(), false);
+  } finally {
+    restoreEnvironment('ORDER_EMAIL_NOTIFICATIONS', previous);
+  }
+});
+
+test('order email notifications only turn on with the exact value "true"', () => {
+  const previous = process.env.ORDER_EMAIL_NOTIFICATIONS;
+
+  try {
+    const { isOrderEmailNotificationsEnabled } = require('../server/orders');
+
+    process.env.ORDER_EMAIL_NOTIFICATIONS = 'true';
+    assert.equal(isOrderEmailNotificationsEnabled(), true);
+
+    // Common near-misses must NOT enable it — only the literal string "true" does.
+    ['TRUE', '1', 'yes', 'false', ''].forEach((value) => {
+      process.env.ORDER_EMAIL_NOTIFICATIONS = value;
+      assert.equal(isOrderEmailNotificationsEnabled(), false, `expected "${value}" to be treated as disabled`);
+    });
+  } finally {
+    restoreEnvironment('ORDER_EMAIL_NOTIFICATIONS', previous);
+  }
+});
+
 test('mapPersistedOrder never crashes on an order with no images at all', () => {
   const { mapPersistedOrder } = require('../server/orders');
 
