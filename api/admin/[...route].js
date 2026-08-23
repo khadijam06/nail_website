@@ -40,6 +40,7 @@ const {
   findOrderById,
   updateOrderStatus,
   archiveOrder,
+  sanitizePostgresConnectionInfo,
 } = require('../../server/orders');
 
 const ALLOWED_UPLOAD_FOLDERS = ['nailit_gallery', 'nailit_branding', 'nailit_content'];
@@ -468,6 +469,15 @@ async function handleOrders(req, res) {
 
     const orders = await listOrdersFromStore({ status, search, sort });
     const newCount = orders.filter((order) => (order.status || 'New') === 'New').length;
+
+    console.log('[admin/orders] list diagnostics', {
+      ...sanitizePostgresConnectionInfo(),
+      status,
+      search,
+      sort,
+      count: orders.length,
+      orderIds: orders.map((order) => order.orderId),
+    });
 
     return sendJson(res, 200, {
       success: true,
